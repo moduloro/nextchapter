@@ -161,4 +161,8 @@ def chat():
         return jsonify({"reply": text})
     except Exception as e:
         traceback.print_exc()
-        return jsonify({"error":
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    print(f"Starting JTBD Coach on http://localhost:{PORT} (model={MODEL}, fallback={FALLBACK_MODEL})")
+    app.run(host="0.0.0.0", port=PORT, debug=True)
