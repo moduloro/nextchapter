@@ -1,0 +1,41 @@
+{
+  "user_state": {
+    "current_phase": "position",
+    "week_in_phase": 1,
+    "constraints": {
+      "financial_runway_months": 18,
+      "family": "2 kids studying",
+      "location": "ZH"
+    },
+    "targets": {
+      "roles": [
+        "Senior/Director Product Management"
+      ],
+      "industries": [
+        "Medtech",
+        "Digital Health"
+      ],
+      "locations": [
+        "CH",
+        "DACH"
+      ]
+    },
+    "artifacts": {
+      "cv": "v0",
+      "linkedin": "draft",
+      "stories": 0
+    },
+    "cadence": {
+      "deep_work_blocks_per_week": 4,
+      "recovery_blocks_per_week": 2
+    },
+    "kpis": {
+      "learning_conversations": 0,
+      "leads": 0,
+      "interviews": 0,
+      "sleep_score": null,
+      "mood": null
+    }
+  },
+  "note": "Sample request via curl"
+}

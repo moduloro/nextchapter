@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NextChapter — Calm Start</title>
+  <meta name="description" content="A quiet, agent-first guide for job loss or career change. One next step at a time." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <style>
+    :root{
+      --bg:#0f1220; --surface:#141824; --text:#e8f0fb; --muted:#9aa7bd; --accent:#6ee7b7; --accent-2:#34d399;
+      --card:#172034; --border:#263043; --focus:#93c5fd; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f7fafc; --surface:#ffffff; --text:#0f172a; --muted:#475569; --card:#ffffff; --border:#e2e8f0; --shadow:0 10px 30px rgba(2,6,23,.08); }
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;font:16px/1.5 Inter,ui-sans-serif,system-ui,-apple-system; background:var(--bg); color:var(--text);
+      background-image: radial-gradient(1000px 600px at 80% -10%, rgba(52,211,153,.12), transparent 60%),
+                       radial-gradient(700px 400px at 0% 0%, rgba(99,102,241,.10), transparent 60%);
+    }
+    .wrap{width:min(860px,94%); margin:0 auto; padding:clamp(1.2rem,5vw,2rem) 0;}
+    .card{background:var(--card); border:1px solid var(--border); border-radius:1rem; box-shadow:var(--shadow);}
+    .panel{padding:clamp(1rem,3vw,1.4rem)}
+    .center{display:grid; place-items:center; text-align:center}
+    header{display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.2rem}
+    .logo{display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--text); font-weight:800}
+    .mark{width:1.9rem;height:1.9rem;border-radius:.6rem;display:grid;place-items:center; background:linear-gradient(135deg,var(--accent), var(--accent-2)); color:#0b1320}
+    h1{font-size:clamp(1.8rem,3.2vw,2.4rem);line-height:1.15;margin:.2rem 0 .6rem}
+    h2{font-size:clamp(1.2rem,2.5vw,1.6rem); margin:0 0 .4rem}
+    .muted{color:var(--muted)}
+    .choices{display:flex; flex-wrap:wrap; gap:.6rem; justify-content:center; margin:.8rem 0 1rem}
+    .screen{display:none}
+    .screen.active{display:block}
+    .intake{display:grid; gap:1rem}
+    .row{display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center}
+    .label{font-weight:800}
+    .chip{padding:.55rem .9rem; border-radius:999px; border:1px solid var(--border); background:var(--surface); cursor:pointer}
+    .chip[aria-pressed="true"], .pill[aria-pressed="true"]{border-color:transparent; background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1320}
+    .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:999px; border:1px solid var(--border); cursor:pointer; background:var(--surface)}
+    .today{display:grid; gap:.8rem}
+
+    /* Phase chip as button with caret */
+    .phase{
+      display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .7rem;
+      border-radius:999px; border:1px solid var(--border);
+      background:color-mix(in lab, var(--accent), transparent 85%); color:#065f46; font-weight:800;
+      cursor:pointer;
+    }
+    .phase:after{ content:"▾"; font-weight:900; color:#065f46; margin-left:.2rem; }
+
+    .todo{display:grid; gap:.4rem}
+    details.more{border-top:1px dashed var(--border); padding-top:.6rem}
+
+    /* Buttons — readable in dark & light */
+    .btn{
+      appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--text);
+      border-radius:.8rem; padding:.8rem 1.1rem; font-weight:700; letter-spacing:.01em; cursor:pointer;
+      transition:background .15s ease, border-color .15s ease, opacity .15s ease;
+    }
+    .btn:hover{opacity:.98}
+    .btn:focus-visible{outline:none; box-shadow:0 0 0 3px var(--focus), var(--shadow)}
+    .btn.primary{background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1320; border-color:transparent}
+    .btn.ghost{background:transparent; color:var(--text); border-color:var(--border); opacity:.95}
+    .btn.ghost:hover{background:rgba(255,255,255,.06)}
+    @media (prefers-color-scheme: light){
+      .btn.ghost:hover{ background:rgba(15,23,42,.06); }
+    }
+
+    /* Coach panel */
+    .coach-fab{position:fixed; right:20px; bottom:20px; z-index:90;} /* below coach panel */
+    .coach-panel{
+      position:fixed; top:0; right:0; height:100%; width:min(560px,96vw); background:var(--surface);
+      border-left:1px solid var(--border); box-shadow:var(--shadow); transform:translateX(100%); transition:.25s ease; z-index:110;
+      display:grid; grid-template-rows:auto auto 1fr auto;
+    }
+    .coach-panel.open{transform:translateX(0)}
+    .coach-header{display:flex; align-items:center; justify-content:space-between; padding:1rem; border-bottom:1px solid var(--border)}
+    .coach-tools{display:flex; gap:.5rem; padding:.6rem 1rem; border-bottom:1px solid var(--border); flex-wrap:wrap}
+    .coach-body{padding:1rem; overflow:auto}
+    .coach-output{background:var(--card); border:1px solid var(--border); border-radius:.8rem; padding:1rem}
+    .coach-output > .page{display:none}
+    .coach-output > .page.active{display:block}
+    .coach-pager{display:flex; justify-content:space-between; gap:.6rem; padding-top:.6rem}
+
+    /* Active tool style */
+    .coach-tools .btn{ background:transparent; color:var(--text); border-color:var(--border); }
+    .coach-tools .btn.active, .coach-tools .btn[aria-pressed="true"]{
+      background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      color:#0b1320; border-color:transparent;
+    }
+
+    .coach-footer{position:sticky; bottom:0; background:var(--surface); display:flex; gap:.5rem; padding:.6rem 1rem 1rem; border-top:1px solid var(--border)}
+    .coach-input{flex:1; background:var(--card); color:var(--text); border:1px solid var(--border); border-radius:.7rem; padding:.7rem .9rem}
+    .coach-input::placeholder{color:var(--muted)}
+    .msg{margin:.5rem 0; padding:.6rem .7rem; border-radius:.6rem}
+    .msg-user{background:rgba(255,255,255,.06)}
+    .msg-coach{background:transparent; border:1px dashed var(--border)}
+
+    /* Library drawer */
+    .drawer{position:fixed; left:0; bottom:0; right:0; transform:translateY(100%); transition:.25s ease; background:var(--surface); border-top:1px solid var(--border); box-shadow:var(--shadow); z-index:100}
+    .drawer.open{transform:translateY(0)}
+    .drawer .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; padding:1rem}
+    @media (max-width:720px){ .drawer .grid{grid-template-columns:1fr} }
+
+    /* Sprint panel */
+    .sprint-panel{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(10,12,20,.65); backdrop-filter: blur(2px); z-index:130;}
+    .sprint-panel.open{display:flex}
+    .sprint-card{width:min(420px,92%); background:var(--card); border:1px solid var(--border); border-radius:1rem; box-shadow:var(--shadow); padding:1.2rem; text-align:center}
+    #sprint-timer{font-size:3rem; font-weight:800; letter-spacing:.03em; margin:.4rem 0 .6rem}
+    .sprint-controls{display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center}
+    .sprint-tip{color:var(--muted); margin-top:.6rem}
+
+    /* Phase popover */
+    .phase-pop{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background:rgba(10,12,20,.55); backdrop-filter:blur(2px); z-index:120;
+    }
+    .phase-pop.open{display:flex}
+    .phase-card{
+      width:min(420px,92%); background:var(--card); border:1px solid var(--border); border-radius:1rem; box-shadow:var(--shadow);
+      padding:1rem 1rem 1.1rem; display:grid; gap:.7rem;
+    }
+    .phase-card h3{margin:.1rem 0 .2rem}
+    .form-row{display:grid; gap:.3rem}
+    .select, .number{
+      appearance:none; width:100%; background:var(--surface); color:var(--text);
+      border:1px solid var(--border); border-radius:.6rem; padding:.6rem .7rem;
+    }
+    .phase-actions{display:flex; gap:.5rem; justify-content:flex-end; margin-top:.3rem}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="logo" href="#"><span class="mark">N</span> NextChapter</a>
+      <div style="display:flex; gap:.5rem;">
+        <button id="open-library" class="btn ghost" aria-expanded="false">Tools</button>
+        <button id="reset" class="btn ghost" title="Clear saved state">Reset</button>
+      </div>
+    </header>
+
+    <!-- Screen 1: Welcome -->
+    <section id="scr-welcome" class="screen active">
+      <div class="card panel center">
+        <h1>We got you! Step by step you'll get there.</h1>
+        <p class="muted">I’ll ask one or two things, then show just your next step.</p>
+        <div class="choices">
+          <button class="pill" data-choice="lost">I just lost my job</button>
+          <button class="pill" data-choice="explore">I’m exploring a change</button>
+          <button class="pill" data-choice="stuck">I’m stuck / stressed</button>
+        </div>
+        <button id="skip-intake" class="btn">Skip — just give me a plan</button>
+      </div>
+    </section>
+
+    <!-- Screen 2: Mini Intake -->
+    <section id="scr-intake" class="screen">
+      <div class="card panel center">
+        <h2>Just three quick taps</h2>
+        <div class="intake">
+          <div class="row" role="group" aria-label="Urgency">
+            <span class="label">Urgency</span>
+            <button class="chip" data-urgency="low">Low</button>
+            <button class="chip" data-urgency="medium">Medium</button>
+            <button class="chip" data-urgency="high">High</button>
+          </div>
+          <div class="row" role="group" aria-label="Energy">
+            <span class="label">Energy</span>
+            <button class="chip" data-energy="low">Low</button>
+            <button class="chip" data-energy="ok">OK</button>
+            <button class="chip" data-energy="good">Good</button>
+          </div>
+          <div class="row" role="group" aria-label="Where are you?">
+            <span class="label">Where are you?</span>
+            <button class="chip" data-stage="stabilize">Stabilize</button>
+            <button class="chip" data-stage="reframe">Reframe</button>
+            <button class="chip" data-stage="position">Position</button>
+            <button class="chip" data-stage="explore">Explore</button>
+            <button class="chip" data-stage="apply">Apply</button>
+            <button class="chip" data-stage="secure">Secure</button>
+            <button class="chip" data-stage="transition">Transition</button>
+            <button class="chip" data-stage="unsure">Not sure</button>
+          </div>
+          <button id="btn-next-step" class="btn primary">Get my next step</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Screen 3: Today Card -->
+    <section id="scr-today" class="screen">
+      <div class="card panel today">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem">
+          <!-- Phase pill is a button -->
+          <button id="phase-chip" class="phase" type="button" aria-haspopup="dialog" aria-expanded="false">Phase · Week</button>
+          <button id="btn-standup" class="btn ghost">Daily check-in</button>
+        </div>
+        <div class="todo">
+          <h2>Do today — one deep, one quick, one tiny</h2>
+          <ul id="todo-list" class="muted" style="margin:.2rem 0 0 1rem"></ul>
+          <div style="display:flex; gap:.6rem; margin-top:.6rem; flex-wrap:wrap">
+            <button id="btn-sprint" class="btn primary">Start 25-min Sprint</button>
+            <button id="btn-open-coach" class="btn">Talk to Coach</button>
+          </div>
+        </div>
+        <details class="more"><summary>Show weekly plan</summary>
+          <div id="plan-md" class="muted" style="margin-top:.6rem"></div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <!-- Phase change popover -->
+  <div id="phase-pop" class="phase-pop" aria-hidden="true" role="dialog" aria-labelledby="phase-pop-title">
+    <div class="phase-card">
+      <h3 id="phase-pop-title">Adjust phase & week</h3>
+      <div class="form-row">
+        <label for="phase-select" class="label">Phase</label>
+        <select id="phase-select" class="select">
+          <option value="stabilize">Stabilize</option>
+          <option value="reframe">Reframe</option>
+          <option value="position">Position</option>
+          <option value="explore">Explore</option>
+          <option value="apply">Apply</option>
+          <option value="secure">Secure</option>
+          <option value="transition">Transition</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="week-input" class="label">Week</label>
+        <input id="week-input" class="number" type="number" min="1" max="16" step="1" />
+      </div>
+      <div class="phase-actions">
+        <button id="phase-cancel" class="btn ghost" type="button">Cancel</button>
+        <button id="phase-save" class="btn primary" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coach Panel -->
+  <button id="fab" class="btn primary coach-fab" aria-controls="coach" aria-expanded="false">Coach</button>
+  <aside id="coach" class="coach-panel" aria-hidden="true" role="dialog" aria-labelledby="coach-title">
+    <header class="coach-header">
+      <h2 id="coach-title" style="margin:0">Your Coach</h2>
+      <button id="coach-close" class="btn ghost">Close</button>
+    </header>
+    <div class="coach-tools">
+      <button class="btn" data-kind="plan">Weekly Plan</button>
+      <button class="btn" data-kind="standup">Check-in</button>
+      <button class="btn" data-kind="gate">Phase Gate</button>
+      <button class="btn" data-kind="triage">If I’m anxious</button>
+    </div>
+    <div class="coach-body">
+      <div id="coach-output" class="coach-output" aria-live="polite"></div>
+      <div class="coach-pager" id="coach-pager">
+        <button id="pg-prev" class="btn ghost" disabled>Back</button>
+        <button id="pg-next" class="btn" disabled>Next</button>
+      </div>
+    </div>
+    <form class="coach-footer" id="coach-form">
+      <input id="coach-input" class="coach-input" type="text" autocomplete="off" placeholder="Type a question… (Enter to send, Shift+Enter for newline)" />
+      <button id="coach-send" class="btn primary" type="submit">Send</button>
+    </form>
+  </aside>
+
+  <!-- Library Drawer -->
+  <div id="drawer" class="drawer" aria-hidden="true">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:1rem; border-bottom:1px solid var(--border)">
+      <strong>Tools, when you want them</strong>
+      <button id="close-drawer" class="btn ghost">Close</button>
+    </div>
+    <div class="grid">
+      <article class="card panel">
+        <h3>CV & LinkedIn Lab</h3>
+        <p class="muted">Evidence-led improvements, fast.</p>
+        <button class="btn">Open</button>
+      </article>
+      <article class="card panel">
+        <h3>Application Tracker</h3>
+        <p class="muted">Keep momentum with follow-ups.</p>
+        <button class="btn">Open</button>
+      </article>
+      <article class="card panel">
+        <h3>Interview Simulator</h3>
+        <p class="muted">Practice senior-level prompts.</p>
+        <button class="btn">Start</button>
+      </article>
+      <article class="card panel">
+        <h3>Financial Checklist</h3>
+        <p class="muted">ALV, health, pension — step-by-step.</p>
+        <button class="btn">Download</button>
+      </article>
+    </div>
+  </div>
+
+  <!-- Sprint Panel -->
+  <div id="sprint" class="sprint-panel" aria-hidden="true">
+    <div class="sprint-card">
+      <h3 style="margin:0 0 .2rem">25-min Sprint</h3>
+      <div id="sprint-timer">25:00</div>
+      <div class="sprint-controls">
+        <button id="sprint-start" class="btn primary">Start</button>
+        <button id="sprint-pause" class="btn">Pause</button>
+        <button id="sprint-reset" class="btn ghost">Reset</button>
+        <button id="sprint-done" class="btn ghost">Done</button>
+      </div>
+      <p id="sprint-tip" class="sprint-tip">Tip: pick one item from “Do today”. Close extra tabs.</p>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Config & Utilities ----------
+    const API_BASE = "/"; // same-origin with Flask
+    const stateKey = "jtbd_state_v1";
+    let userState = JSON.parse(localStorage.getItem(stateKey) || "null") || {
+      current_phase: null, week_in_phase: 1, energy: null, urgency: null
+    };
+    let lastContext = null; // {kind, md} of last tool panel
+    if (typeof window.cap !== "function") { window.cap = s => (s || "").replace(/^\w/, c => c.toUpperCase()); }
+    marked.setOptions({ gfm: true, breaks: true });
+
+    function renderMarkdown(md, el){
+      try { el.innerHTML = DOMPurify.sanitize(marked.parse(md || "")); }
+      catch { el.textContent = md || ""; }
+    }
+
+    // ---------- Screen nav ----------
+    const scrWelcome = document.getElementById('scr-welcome');
+    const scrIntake  = document.getElementById('scr-intake');
+    const scrToday   = document.getElementById('scr-today');
+    function show(id){ [scrWelcome,scrIntake,scrToday].forEach(s=>s.classList.remove('active')); id.classList.add('active'); }
+
+    // Reset (clear saved state)
+    document.getElementById('reset').addEventListener('click', ()=>{
+      localStorage.removeItem(stateKey);
+      userState = { current_phase:null, week_in_phase:1, energy:null, urgency:null };
+      show(scrWelcome);
+    });
+
+    // Welcome → Intake / Skip
+    document.querySelectorAll('#scr-welcome .pill').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ show(scrIntake); });
+    });
+    document.getElementById('skip-intake').addEventListener('click', ()=>{
+      if(!userState.current_phase){ userState.current_phase = 'stabilize'; userState.week_in_phase = 1; }
+      persist(); initToday();
+    });
+
+    // ---------- Intake chips ----------
+    let tmp = { urgency:null, energy:null, stage:null };
+    ['urgency','energy','stage'].forEach(key=>{
+      document.querySelectorAll(`[data-${key}]`).forEach(b=>{
+        b.addEventListener('click', (e)=>{
+          const v = e.currentTarget.dataset[key];
+          tmp[key]=v;
+          const group = e.currentTarget.parentElement;
+          group.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
+          e.currentTarget.setAttribute('aria-pressed','true');
+        });
+      });
+    });
+    document.getElementById('btn-next-step').addEventListener('click', ()=>{
+      userState.urgency = tmp.urgency || 'medium';
+      userState.energy  = tmp.energy  || 'low';
+      userState.current_phase = (tmp.stage && tmp.stage!=='unsure') ? tmp.stage : 'stabilize';
+      userState.week_in_phase = 1;
+      persist(); initToday();
+    });
+    function persist(){ localStorage.setItem(stateKey, JSON.stringify(userState)); }
+
+    // ---------- Today Card ----------
+    const phaseChip = document.getElementById('phase-chip');
+    const todoList  = document.getElementById('todo-list');
+    const planMd    = document.getElementById('plan-md');
+
+    async function initToday(){
+      const phaseLabel = (typeof cap === "function")
+        ? cap(userState.current_phase || 'stabilize')
+        : (userState.current_phase || 'stabilize');
+      phaseChip.textContent = `${phaseLabel} · Week ${userState.week_in_phase || 1}`;
+      show(scrToday);
+
+      const plan = await callCoach('plan', userState, 'Return a Weekly Plan; include a section starting with "Do today (90/30/15)".');
+      renderMarkdown(plan, planMd);
+      renderDoToday(plan);
+    }
+
+    // Robust task extraction
+    function renderDoToday(md){
+      const tasks = extractDoToday(md);
+      todoList.innerHTML = tasks.length
+        ? tasks.map(t => `<li>${DOMPurify.sanitize(t)}</li>`).join('')
+        : '<li>Open the Coach and tap “Weekly Plan”.</li>';
+    }
+    function extractDoToday(md){
+      if (!md) return [];
+      const lines = md.split(/\r?\n/);
+      const out = [];
+      const grab = (rx) => { for (const ln of lines) { const m = ln.match(rx); if (m && m[1] && m[1].trim()) return m[1].trim(); } return null; };
+      const rx90 = /(?:^|\s)(?:[-*•]\s*)?(?:\*\*?\s*)?(?:90\s*min|90m|90)\s*(?:[:\-–—]\s*)(.+)$/i;
+      const rx30 = /(?:^|\s)(?:[-*•]\s*)?(?:\*\*?\s*)?(?:30\s*min|30m|30)\s*(?:[:\-–—]\s*)(.+)$/i;
+      const rx15 = /(?:^|\s)(?:[-*•]\s*)?(?:\*\*?\s*)?(?:15\s*min|15m|15)\s*(?:[:\-–—]\s*)(.+)$/i;
+      const t90 = grab(rx90); if (t90) out.push(`90 min — ${t90}`);
+      const t30 = grab(rx30); if (t30) out.push(`30 min — ${t30}`);
+      const t15 = grab(rx15); if (t15) out.push(`15 min — ${t15}`);
+      if (out.length) return out;
+      const ix = md.toLowerCase().indexOf('do today');
+      if (ix >= 0) {
+        const after = md.slice(ix);
+        const bullets = [];
+        const re = /\n\s*[-*•]\s+(.+?)(?=\n|$)/g;
+        let m; while ((m = re.exec(after)) && bullets.length < 3) { const txt = (m[1] || '').trim(); if (txt) bullets.push(txt); }
+        if (bullets.length) return bullets;
+      }
+      const chkIdx = md.toLowerCase().indexOf('checklist');
+      if (chkIdx >= 0) {
+        const after = md.slice(chkIdx);
+        const bullets = [];
+        const re = /\n\s*(?:[-*•]|☐)\s+(.+?)(?=\n|$)/g;
+        let m; while ((m = re.exec(after)) && bullets.length < 3) { const txt = (m[1] || '').trim(); if (txt) bullets.push(txt); }
+        if (bullets.length) return bullets;
+      }
+      return [];
+    }
+
+    // ---------- Phase popover logic ----------
+    const phasePop = document.getElementById('phase-pop');
+    const phaseSelect = document.getElementById('phase-select');
+    const weekInput = document.getElementById('week-input');
+    const phaseCancel = document.getElementById('phase-cancel');
+    const phaseSave = document.getElementById('phase-save');
+
+    const phases = ['stabilize','reframe','position','explore','apply','secure','transition'];
+
+    // Week ranges per phase
+    const PHASE_WEEKS = {
+      stabilize: 3,
+      reframe: 3,
+      position: 6,
+      explore: 6,
+      apply: 8,
+      secure: 4,
+      transition: 4
+    };
+
+    function openPhasePop(){
+      const cur = (userState.current_phase && phases.includes(userState.current_phase)) ? userState.current_phase : 'stabilize';
+      const maxW = PHASE_WEEKS[cur] || 8;
+
+      phaseSelect.value = cur;
+      weekInput.min = 1;
+      weekInput.max = String(maxW);
+      weekInput.value = Math.min(Math.max(1, userState.week_in_phase || 1), maxW);
+
+      phasePop.classList.add('open');
+      phasePop.setAttribute('aria-hidden','false');
+      phaseChip.setAttribute('aria-expanded','true');
+      setTimeout(()=>phaseSelect.focus(), 0);
+
+      phasePop.addEventListener('click', onPhaseBackdrop);
+      window.addEventListener('keydown', onPhaseEsc);
+    }
+    function closePhasePop(){
+      phasePop.classList.remove('open');
+      phasePop.setAttribute('aria-hidden','true');
+      phaseChip.setAttribute('aria-expanded','false');
+      phasePop.removeEventListener('click', onPhaseBackdrop);
+      window.removeEventListener('keydown', onPhaseEsc);
+      phaseChip.focus();
+    }
+    function onPhaseBackdrop(e){ if(e.target === phasePop) closePhasePop(); }
+    function onPhaseEsc(e){ if(e.key === 'Escape') closePhasePop(); }
+
+    phaseChip.addEventListener('click', openPhasePop);
+    phaseCancel.addEventListener('click', closePhasePop);
+
+    phaseSelect.addEventListener('change', ()=>{
+      const p = phaseSelect.value;
+      const maxW = PHASE_WEEKS[p] || 8;
+      weekInput.max = String(maxW);
+      if(+weekInput.value > maxW) weekInput.value = maxW;
+    });
+
+    phaseSave.addEventListener('click', async ()=>{
+      const p = phaseSelect.value;
+      const maxW = PHASE_WEEKS[p] || 8;
+      const w = Math.max(1, Math.min(maxW, parseInt(weekInput.value || '1', 10)));
+
+      userState.current_phase = phases.includes(p) ? p : 'stabilize';
+      userState.week_in_phase = w;
+      persist();
+      closePhasePop();
+      await initToday(); // refresh plan + tasks
+    });
+
+    // ---------- Coach panel (quick tools + chat) ----------
+    const fab = document.getElementById('fab');
+    const coach = document.getElementById('coach');
+    const coachClose = document.getElementById('coach-close');
+    const coachOut = document.getElementById('coach-output');
+    const btnPrev = document.getElementById('pg-prev');
+    const btnNext = document.getElementById('pg-next');
+    const pagerWrap = document.getElementById('coach-pager');
+
+    // Active tool helpers
+    const toolButtons = Array.from(document.querySelectorAll('.coach-tools .btn'));
+    function setActiveTool(btn){
+      toolButtons.forEach(b=>{
+        const on = (btn && b === btn);
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+
+    function openCoach(){
+      coach.classList.add('open');
+      coach.setAttribute('aria-hidden','false');
+      fab.setAttribute('aria-expanded','true');
+      fab.hidden = true; // hide FAB so it can’t overlap
+      setActiveTool(null); // default to free chat view
+    }
+    function closeCoach(){
+      coach.classList.remove('open');
+      coach.setAttribute('aria-hidden','true');
+      fab.setAttribute('aria-expanded','false');
+      fab.hidden = false;
+    }
+    fab.onclick = openCoach; document.getElementById('btn-open-coach').onclick = openCoach; coachClose.onclick = closeCoach;
+
+    // Quick tools
+    document.querySelectorAll('.coach-tools .btn').forEach(b=>{
+      b.addEventListener('click', async ()=>{
+        setActiveTool(b);
+        const kind = b.dataset.kind;
+        const note = (kind==='triage') ? 'Use Emotional Spike format.' : '';
+        coachOut.innerHTML = '<em>Generating…</em>';
+        const md = await callCoach(kind, userState, note);
+        lastContext = { kind, md };              // store panel context
+        renderPaged(md, coachOut);
+      });
+    });
+
+    function setPagerVisible(on){ pagerWrap.style.display = on ? 'flex' : 'none'; }
+
+    function renderPaged(md, container){
+      setPagerVisible(true);
+      container.innerHTML='';
+      const parts = (md && md.match(/\n##? /)) ? md.split(/\n(?=##?\s)/g) : [md || 'No content.'];
+      const pages = parts.map(p => DOMPurify.sanitize(marked.parse(p)));
+      pages.forEach((html,i)=>{
+        const div = document.createElement('div');
+        div.className='page'+(i===0?' active':'');
+        div.innerHTML = html;
+        container.appendChild(div);
+      });
+      let idx=0; const nodes = [...container.querySelectorAll('.page')];
+      function sync(){ nodes.forEach((n,i)=>n.classList.toggle('active', i===idx)); btnPrev.disabled = (idx===0); btnNext.disabled = (idx===nodes.length-1); }
+      btnPrev.onclick = ()=>{ idx=Math.max(0,idx-1); sync(); };
+      btnNext.onclick = ()=>{ idx=Math.min(nodes.length-1,idx+1); sync(); };
+      sync();
+      container.scrollTop = 0;
+    }
+
+    // Chat composer
+    const form = document.getElementById('coach-form');
+    const input = document.getElementById('coach-input');
+    const sendBtn = document.getElementById('coach-send');
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const text = (input.value || '').trim();
+      if(!text) return;
+      openCoach();
+      setActiveTool(null); // chat mode, not a quick tool
+      appendChat('user', text);
+      input.value = '';
+      input.disabled = true; sendBtn.disabled = true;
+
+      const md = await askCoach(text, lastContext);
+      appendChat('coach', md);
+
+      input.disabled = false; sendBtn.disabled = false;
+      input.focus();
+    });
+    input.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        form.dispatchEvent(new Event('submit', {cancelable:true}));
+      }
+    });
+
+    function appendChat(role, mdOrText){
+      setPagerVisible(false);
+      const div = document.createElement('div');
+      div.className = `msg msg-${role}`;
+      const html = role === 'user'
+        ? DOMPurify.sanitize(marked.parseInline(String(mdOrText)))
+        : DOMPurify.sanitize(marked.parse(String(mdOrText || '')));
+      div.innerHTML = html;
+      coachOut.appendChild(div);
+      coachOut.scrollTop = coachOut.scrollHeight;
+    }
+
+    async function askCoach(message, context){
+      const payload = { user_state: mapState(userState), message };
+      if (context && context.md){
+        payload.context_md = String(context.md).slice(0, 4000);
+        payload.context_kind = context.kind || 'unknown';
+      }
+      try{
+        const r = await fetch(`${API_BASE}chat`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(payload)
+        });
+        if (r.ok){
+          const data = await r.json();
+          return data.reply || 'No content.';
+        }
+      } catch(_) {}
+
+      // Fallback if /chat is missing: still include the context in the note
+      const ctx = context && context.md
+        ? `\n\nContext (from ${context.kind}):\n${String(context.md).slice(0,2000)}\n`
+        : '';
+      return await callCoach('standup', userState,
+        `Answer the user's question about the context below. If they say "bullet 1", find the first actionable bullet and help with it step-by-step.${ctx}\nQuestion: ${message}`
+      );
+    }
+
+    // Daily stand-up shortcut (also sets context + highlight)
+    document.getElementById('btn-standup').addEventListener('click', async ()=>{
+      openCoach();
+      const standupBtn = document.querySelector('.coach-tools .btn[data-kind="standup"]');
+      setActiveTool(standupBtn);
+      coachOut.innerHTML='<em>Generating…</em>';
+      const md = await callCoach('standup', userState, 'Keep it tight.');
+      lastContext = { kind: 'standup', md };
+      renderPaged(md, coachOut);
+    });
+
+    // ---------- Library drawer ----------
+    const drawer = document.getElementById('drawer');
+    const openLib = document.getElementById('open-library');
+    const closeLib = document.getElementById('close-drawer');
+    openLib.onclick = ()=>{ drawer.classList.add('open'); openLib.setAttribute('aria-expanded','true'); };
+    closeLib.onclick = ()=>{ drawer.classList.remove('open'); openLib.setAttribute('aria-expanded','false'); };
+
+    // ---------- API calls ----------
+    async function callCoach(kind, state, note){
+      try{
+        const res = await fetch(`${API_BASE}${kind}`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ user_state: mapState(state), note })
+        });
+        const data = await res.json();
+        return data.reply || data.error || 'No content.';
+      }catch(e){
+        console.error(e);
+        return 'Error contacting coach: '+e.message;
+      }
+    }
+    function mapState(s){ return { current_phase: s.current_phase||'stabilize', week_in_phase: s.week_in_phase||1, energy: s.energy, urgency: s.urgency }; }
+
+    // ---------- Sprint panel ----------
+    const sprint = document.getElementById('sprint');
+    const sprintTimer = document.getElementById('sprint-timer');
+    const sprintTip = document.getElementById('sprint-tip');
+    const sprintStart = document.getElementById('sprint-start');
+    const sprintPause = document.getElementById('sprint-pause');
+    const sprintReset = document.getElementById('sprint-reset');
+    const sprintDone = document.getElementById('sprint-done');
+
+    let sprintMs = 25*60*1000;
+    let remaining = sprintMs;
+    let rafId = null;
+    let running = false;
+    let lastTs = 0;
+
+    function fmt(ms){ const t = Math.max(0, Math.round(ms/1000)); const m = Math.floor(t/60); const s = t%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+    function openSprint(){
+      sprint.classList.add('open'); sprint.setAttribute('aria-hidden','false');
+      resetSprint();
+      sprintTip.textContent = 'Tip: choose one task from “Do today”. Close extra tabs.';
+    }
+    function closeSprint(){ stopSprint(); sprint.classList.remove('open'); sprint.setAttribute('aria-hidden','true'); }
+    function startSprint(){
+      if(running) return;
+      running = true;
+      lastTs = performance.now();
+      rafId = requestAnimationFrame(tickSprint);
+    }
+    function pauseSprint(){
+      if(!running) return;
+      running = false;
+      cancelAnimationFrame(rafId);
+    }
+    function stopSprint(){
+      running = false;
+      cancelAnimationFrame(rafId);
+    }
+    function resetSprint(){
+      stopSprint();
+      remaining = sprintMs;
+      sprintTimer.textContent = fmt(remaining);
+    }
+    function tickSprint(ts){
+      const dt = ts - lastTs; lastTs = ts;
+      remaining -= dt;
+      sprintTimer.textContent = fmt(remaining);
+      if (remaining <= 0){
+        completeSprint();
+        return;
+      }
+      rafId = requestAnimationFrame(tickSprint);
+    }
+    function completeSprint(){
+      stopSprint();
+      remaining = 0;
+      sprintTimer.textContent = '00:00';
+      sprintTip.textContent = 'Nice work — want a quick check-in?';
+      openCoach();
+      appendChat('coach', '_Great sprint!_ Tell me one win, one blocker, and your next micro-step.');
+    }
+
+    document.getElementById('btn-sprint').addEventListener('click', openSprint);
+    sprintStart.addEventListener('click', startSprint);
+    sprintPause.addEventListener('click', pauseSprint);
+    sprintReset.addEventListener('click', resetSprint);
+    sprintDone.addEventListener('click', closeSprint);
+    sprint.addEventListener('click', (e)=>{ if(e.target === sprint) closeSprint(); });
+    window.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && sprint.classList.contains('open')) closeSprint(); });
+
+    // ---------- Auto-resume ----------
+    if(userState.current_phase){ initToday(); }
+  </script>
+</body>
+</html>
