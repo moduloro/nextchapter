@@ -114,3 +114,14 @@
       border:1px solid var(--border); border-radius:.6rem; padding:.6rem .7rem;
     }
     .phase-actions{display:flex; gap:.5rem; justify-content:flex-end; margin-top:.3rem}
+
+    /* Override all buttons to be black with black text and 1px border */
+    button,
+    .btn,
+    .chip,
+    .pill,
+    .phase {
+      background:#000 !important;
+      border:1px solid #000 !important;
+      color:#000 !important;
+    }
