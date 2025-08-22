@@ -24,9 +24,9 @@
     .intake{display:grid; gap:1rem}
     .row{display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center}
     .label{font-weight:800}
-    .chip{padding:.55rem .9rem; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer}
-    .chip[aria-pressed="true"], .pill[aria-pressed="true"]{border-color:var(--accent); background:var(--accent); color:#fff}
-    .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:999px; border:1px solid var(--accent); cursor:pointer; background:var(--accent); color:#fff}
+    .chip{padding:.55rem .9rem; border-radius:999px; border:2px solid var(--accent); background:#fff; color:var(--accent); cursor:pointer}
+    .chip[aria-pressed="true"], .pill[aria-pressed="true"]{border-color:var(--accent); background:#fff; color:var(--accent)}
+    .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:999px; border:2px solid var(--accent); cursor:pointer; background:#fff; color:var(--accent)}
     .today{display:grid; gap:.8rem}
 
     footer{margin-top:2rem; text-align:center; font-size:12pt; color:#666}
@@ -34,25 +34,25 @@
     /* Phase chip as button with caret */
     .phase{
       display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .7rem;
-      border-radius:999px; border:1px solid var(--accent);
-      background:var(--accent); color:#fff; font-weight:800;
+      border-radius:999px; border:2px solid var(--accent);
+      background:#fff; color:var(--accent); font-weight:800;
       cursor:pointer;
     }
-    .phase:after{ content:"▾"; font-weight:900; color:#fff; margin-left:.2rem; }
+    .phase:after{ content:"▾"; font-weight:900; color:var(--accent); margin-left:.2rem; }
 
     .todo{display:grid; gap:.4rem}
     details.more{border-top:1px dashed var(--border); padding-top:.6rem}
 
     /* Buttons — readable in dark & light */
     .btn{
-      appearance:none; border:1px solid var(--accent); background:var(--accent); color:#fff;
-      border-radius:.8rem; padding:.8rem 1.1rem; font-weight:700; letter-spacing:.01em; cursor:pointer;
+      appearance:none; border:2px solid var(--accent); background:#fff; color:var(--accent);
+      border-radius:999px; padding:.8rem 1.1rem; font-weight:700; letter-spacing:.01em; cursor:pointer;
       transition:background .15s ease, opacity .15s ease;
     }
     .btn:hover{opacity:.98}
     .btn:focus-visible{outline:none; box-shadow:0 0 0 3px var(--focus), var(--shadow)}
-    .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
-    .btn.ghost{background:var(--accent); color:#fff; border-color:var(--accent); opacity:1}
+    .btn.primary{background:#fff; color:var(--accent); border-color:var(--accent)}
+    .btn.ghost{background:#fff; color:var(--accent); border-color:var(--accent); opacity:1}
 
     /* Coach panel */
     .coach-fab{position:fixed; right:20px; bottom:20px; z-index:90;} /* below coach panel */
@@ -71,9 +71,9 @@
     .coach-pager{display:flex; justify-content:space-between; gap:.6rem; padding-top:.6rem}
 
     /* Active tool style */
-    .coach-tools .btn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .coach-tools .btn{ background:#fff; color:var(--accent); border-color:var(--accent); }
     .coach-tools .btn.active, .coach-tools .btn[aria-pressed="true"]{
-      background:var(--accent); color:#fff; border-color:var(--accent);
+      background:#fff; color:var(--accent); border-color:var(--accent);
     }
 
     .coach-footer{position:sticky; bottom:0; background:var(--surface); display:flex; gap:.5rem; padding:.6rem 1rem 1rem; border-top:1px solid var(--border)}
