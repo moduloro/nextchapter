@@ -133,7 +133,7 @@
   color:#fff !important;
 }
 
-    /* Active button style: black background and black text */
+    /* Active button style: black background and white text */
     button:active,
     .btn:active,
     .chip:active,
@@ -151,5 +151,5 @@
     .phase[aria-pressed="true"] {
       background:#000 !important;
       border:1px solid #000 !important;
-      color:#000 !important;
+      color:#fff !important;
     }
