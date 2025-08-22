@@ -228,7 +228,15 @@
     });
 
     // ---------- Intake chips ----------
+    const btnNextStep = document.getElementById('btn-next-step');
     let tmp = { urgency:null, energy:null, stage:null };
+    function updateNextStepButton(){
+      if(tmp.urgency && tmp.energy && tmp.stage){
+        btnNextStep.className = 'pill btn-primary';
+      } else {
+        btnNextStep.className = 'btn primary';
+      }
+    }
     ['urgency','energy','stage'].forEach(key=>{
       document.querySelectorAll(`[data-${key}]`).forEach(b=>{
         b.addEventListener('click', (e)=>{
@@ -237,10 +245,12 @@
           const group = e.currentTarget.parentElement;
           group.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
           e.currentTarget.setAttribute('aria-pressed','true');
+          updateNextStepButton();
         });
       });
     });
-    document.getElementById('btn-next-step').addEventListener('click', ()=>{
+    updateNextStepButton();
+    btnNextStep.addEventListener('click', ()=>{
       userState.urgency = tmp.urgency || 'medium';
       userState.energy  = tmp.energy  || 'low';
       userState.current_phase = (tmp.stage && tmp.stage!=='unsure') ? tmp.stage : 'stabilize';
