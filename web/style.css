@@ -1,7 +1,7 @@
     :root{
       --bg:#ffffff; --surface:#ffffff; --text:#1d1d1f; --muted:#6e6e73;
-      --accent:#0071e3; --accent-2:#005bb5;
-      --card:#ffffff; --border:#d2d2d7; --focus:#0071e3; --shadow:0 4px 12px rgba(0,0,0,.1);
+      --accent:#007bff; --accent-2:#007bff;
+      --card:#ffffff; --border:#d2d2d7; --focus:#007bff; --shadow:0 4px 12px rgba(0,0,0,.1);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -24,9 +24,9 @@
     .intake{display:grid; gap:1rem}
     .row{display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center}
     .label{font-weight:800}
-    .chip{padding:.55rem .9rem; border-radius:999px; border:1px solid var(--border); background:var(--surface); cursor:pointer}
-    .chip[aria-pressed="true"], .pill[aria-pressed="true"]{border-color:transparent; background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1320}
-    .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:999px; border:1px solid var(--border); cursor:pointer; background:var(--surface)}
+    .chip{padding:.55rem .9rem; border-radius:999px; border:1px solid var(--accent); background:var(--accent); color:#fff; cursor:pointer}
+    .chip[aria-pressed="true"], .pill[aria-pressed="true"]{border-color:var(--accent); background:var(--accent); color:#fff}
+    .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:999px; border:1px solid var(--accent); cursor:pointer; background:var(--accent); color:#fff}
     .today{display:grid; gap:.8rem}
 
     footer{margin-top:2rem; text-align:center; font-size:12pt; color:#666}
@@ -34,26 +34,25 @@
     /* Phase chip as button with caret */
     .phase{
       display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .7rem;
-      border-radius:999px; border:1px solid var(--border);
-      background:color-mix(in lab, var(--accent), transparent 85%); color:#065f46; font-weight:800;
+      border-radius:999px; border:1px solid var(--accent);
+      background:var(--accent); color:#fff; font-weight:800;
       cursor:pointer;
     }
-    .phase:after{ content:"▾"; font-weight:900; color:#065f46; margin-left:.2rem; }
+    .phase:after{ content:"▾"; font-weight:900; color:#fff; margin-left:.2rem; }
 
     .todo{display:grid; gap:.4rem}
     details.more{border-top:1px dashed var(--border); padding-top:.6rem}
 
     /* Buttons — readable in dark & light */
     .btn{
-      appearance:none; border:1px solid var(--border); background:var(--surface); color:var(--text);
+      appearance:none; border:1px solid var(--accent); background:var(--accent); color:#fff;
       border-radius:.8rem; padding:.8rem 1.1rem; font-weight:700; letter-spacing:.01em; cursor:pointer;
-      transition:background .15s ease, border-color .15s ease, opacity .15s ease;
+      transition:background .15s ease, opacity .15s ease;
     }
     .btn:hover{opacity:.98}
     .btn:focus-visible{outline:none; box-shadow:0 0 0 3px var(--focus), var(--shadow)}
-    .btn.primary{background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:#0b1320; border-color:transparent}
-    .btn.ghost{background:transparent; color:var(--text); border-color:var(--border); opacity:.95}
-    .btn.ghost:hover{background:rgba(0,0,0,.06)}
+    .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+    .btn.ghost{background:var(--accent); color:#fff; border-color:var(--accent); opacity:1}
 
     /* Coach panel */
     .coach-fab{position:fixed; right:20px; bottom:20px; z-index:90;} /* below coach panel */
@@ -72,10 +71,9 @@
     .coach-pager{display:flex; justify-content:space-between; gap:.6rem; padding-top:.6rem}
 
     /* Active tool style */
-    .coach-tools .btn{ background:transparent; color:var(--text); border-color:var(--border); }
+    .coach-tools .btn{ background:var(--accent); color:#fff; border-color:var(--accent); }
     .coach-tools .btn.active, .coach-tools .btn[aria-pressed="true"]{
-      background:linear-gradient(135deg, var(--accent), var(--accent-2));
-      color:#0b1320; border-color:transparent;
+      background:var(--accent); color:#fff; border-color:var(--accent);
     }
 
     .coach-footer{position:sticky; bottom:0; background:var(--surface); display:flex; gap:.5rem; padding:.6rem 1rem 1rem; border-top:1px solid var(--border)}
