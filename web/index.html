@@ -46,6 +46,8 @@
     .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:999px; border:1px solid var(--border); cursor:pointer; background:var(--surface)}
     .today{display:grid; gap:.8rem}
 
+    footer{margin-top:2rem; text-align:center; font-size:.875rem; color:var(--muted)}
+
     /* Phase chip as button with caret */
     .phase{
       display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .7rem;
@@ -314,8 +316,9 @@
     </div>
   </div>
 
-  <footer>Last updated by Codex</footer>
+  <footer>Last updated by Codex <span id="deploy-time"></span></footer>
   <script>
+    document.getElementById('deploy-time').textContent = new Date(document.lastModified).toLocaleString();
     // ---------- Config & Utilities ----------
     const API_BASE = "/"; // same-origin with Flask
     const stateKey = "jtbd_state_v1";
