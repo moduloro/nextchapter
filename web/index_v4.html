@@ -11,8 +11,8 @@
       --surface: #141922;
       --muted: #94a3b8;
       --text: #e6eef8;
-      --accent: #6ee7b7; /* teal/green for hope */
-      --accent-strong: #34d399;
+      --accent: #007bff;
+      --accent-strong: #007bff;
       --card: #1b2330;
       --card-border: #263043;
       --warning: #fbbf24;
@@ -37,8 +37,8 @@
       margin: 0;
       font: 16px/1.5 ui-sans-serif, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       color: var(--text);
-      background: radial-gradient(1200px 600px at 70% -10%, rgba(52, 211, 153, 0.15), transparent 60%),
-                  radial-gradient(800px 400px at 0% 0%, rgba(99, 102, 241, 0.12), transparent 60%),
+        background: radial-gradient(1200px 600px at 70% -10%, rgba(0, 123, 255, 0.15), transparent 60%),
+                    radial-gradient(800px 400px at 0% 0%, rgba(0, 123, 255, 0.12), transparent 60%),
                   var(--bg);
     }
     .container { width: min(1120px, 92%); margin: 0 auto; }
@@ -56,10 +56,10 @@
     nav[aria-label="Primary"] a { text-decoration: none; color: var(--text); opacity: .88; padding: .5rem .7rem; border-radius: .5rem; }
     nav[aria-label="Primary"] a:hover { background: color-mix(in lab, var(--card), transparent 40%); opacity: 1; }
 
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .8rem 1.1rem; border-radius: .8rem; border: 1px solid var(--card-border); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 650; box-shadow: var(--shadow); }
-    .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus), var(--shadow); }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #0b1320; border-color: transparent; }
-    .btn-outline { background: transparent; border-color: var(--card-border); }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .8rem 1.1rem; border-radius: 999px; border: 2px solid var(--accent); background: #fff; color: var(--accent); text-decoration: none; font-weight: 650; box-shadow: var(--shadow); }
+      .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus), var(--shadow); }
+      .btn-primary { background: #fff; color: var(--accent); border-color: var(--accent); }
+      .btn-outline { background: #fff; border-color: var(--accent); }
 
     /* Global card default */
     .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 1rem; padding: 1rem; }
@@ -96,8 +96,8 @@
     blockquote { margin: 0; font-size: 1.05rem; }
     .quote { color: var(--muted); }
     .cite { display: block; margin-top: .5rem; font-weight: 700; }
-    .carousel__control { position: absolute; top: 50%; transform: translateY(-50%); border: 1px solid var(--card-border); background: var(--surface); color: var(--text); width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; cursor: pointer; }
-    .carousel__control:hover { background: color-mix(in lab, var(--surface), transparent 20%); }
+      .carousel__control { position: absolute; top: 50%; transform: translateY(-50%); border: 2px solid var(--accent); background: #fff; color: var(--accent); width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center; cursor: pointer; }
+      .carousel__control:hover { background: color-mix(in srgb, var(--accent), #fff 90%); }
     .carousel__control.prev { left: .6rem; }
     .carousel__control.next { right: .6rem; }
     .dots { display: flex; gap: .4rem; justify-content: center; margin-top: .6rem; }
