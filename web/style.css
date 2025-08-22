@@ -125,3 +125,10 @@
       border:1px solid #000 !important;
       color:#000 !important;
     }
+
+    /* Primary button style: blue background with white border and text */
+    .btn-primary{
+      background:var(--accent) !important;
+      border:1px solid #fff !important;
+      color:#fff !important;
+    }
