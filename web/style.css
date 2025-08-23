@@ -88,6 +88,7 @@
     /* Library drawer */
     .drawer{position:fixed; left:0; bottom:0; right:0; top:0; transform:translateY(100%); transition:.25s ease; background:var(--surface); border-top:1px solid var(--border); box-shadow:var(--shadow); z-index:100; overflow-y:auto;}
     .drawer.open{transform:translateY(0)}
+    .drawer > *{width:min(860px,94%); margin:0 auto;}
     .drawer .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.6rem; padding:1rem}
     @media (max-width:720px){ .drawer .grid{grid-template-columns:1fr} }
 
