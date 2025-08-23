@@ -161,7 +161,7 @@
 
     /* "scr-" screens: remove card borders/shadows and apply gray background */
     [id^="scr-"] .card{
-      background:#eee;
+      background:#f6f6f6;
       border:none;
       box-shadow:none;
     }
