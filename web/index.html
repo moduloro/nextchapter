@@ -307,6 +307,7 @@ function fitWelcomeTiles(){
 
       planStatus.textContent = 'Generating weekly plan…';
       planMd.innerHTML = '';
+      todoList.innerHTML = '<li>Generating daily plan…</li>';
       const plan = await callCoach('plan', userState, 'Return a Weekly Plan; include a section starting with "Do today (90/30/15)".');
       const planWithTools = addToolsSection(plan);
       renderMarkdown(planWithTools, planMd);
@@ -421,6 +422,7 @@ function fitWelcomeTiles(){
       // Clear out old plan immediately and show loading state
       planStatus.textContent = 'Generating weekly plan…';
       planMd.innerHTML = '';
+      todoList.innerHTML = '<li>Generating daily plan…</li>';
       // Reset coach panel so stale content isn't shown
       const activeTool = document.querySelector('.coach-tools .btn.active');
       if (activeTool) {
