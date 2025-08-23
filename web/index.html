@@ -218,6 +218,12 @@
       catch { el.textContent = md || ""; }
     }
 
+    function addToolsSection(md){
+      const tools = '\n\n## Tools\n- [CV & LinkedIn Lab](cv.html)\n- [Application Tracker](tracker.html)\n- [Interview Simulator](interview.html)\n- [Financial Checklist](financial.html)\n';
+      if(!md) return tools.trimStart();
+      return md.includes('## Tools') ? md : md.trimEnd() + tools;
+    }
+
     // ---------- Screen nav ----------
     const scrWelcome = document.getElementById('scr-welcome');
     const scrIntake  = document.getElementById('scr-intake');
@@ -285,8 +291,9 @@
       show(scrToday);
 
       const plan = await callCoach('plan', userState, 'Return a Weekly Plan; include a section starting with "Do today (90/30/15)".');
-      renderMarkdown(plan, planMd);
-      renderDoToday(plan);
+      const planWithTools = addToolsSection(plan);
+      renderMarkdown(planWithTools, planMd);
+      renderDoToday(planWithTools);
     }
 
     // Robust task extraction
@@ -438,7 +445,8 @@
         const kind = b.dataset.kind;
         const note = (kind==='triage') ? 'Use Emotional Spike format.' : '';
         coachOut.innerHTML = '<em>Generating…</em>';
-        const md = await callCoach(kind, userState, note);
+        let md = await callCoach(kind, userState, note);
+        if(['plan','standup','gate'].includes(kind)) md = addToolsSection(md);
         lastContext = { kind, md };              // store panel context
         renderPaged(md, coachOut);
       });
@@ -538,7 +546,8 @@
       const standupBtn = document.querySelector('.coach-tools .btn[data-kind="standup"]');
       setActiveTool(standupBtn);
       coachOut.innerHTML='<em>Generating…</em>';
-      const md = await callCoach('standup', userState, 'Keep it tight.');
+      let md = await callCoach('standup', userState, 'Keep it tight.');
+      md = addToolsSection(md);
       lastContext = { kind: 'standup', md };
       renderPaged(md, coachOut);
     });
