@@ -159,14 +159,22 @@
       color:#fff !important;
     }
 
+    /* Welcome screen without card border or shadow */
+    #scr-welcome .card{
+      border:none;
+      box-shadow:none;
+    }
+
     /* Tile-style call to actions on welcome screen */
-    .choices.tiles{
+    #scr-welcome .choices.tiles{
       display:grid;
       gap:.6rem;
       grid-template-columns:1fr;
+      width:100%;
+      justify-self:stretch;
     }
 
-    button.tile{
+    #scr-welcome button.tile{
       position:relative;
       display:flex;
       align-items:flex-end;
@@ -186,6 +194,6 @@
     }
 
     @media (min-width:600px){
-      .choices.tiles{grid-template-columns:repeat(3,1fr);}
-      button.tile{aspect-ratio: 1 / 2;}
+      #scr-welcome .choices.tiles{grid-template-columns:repeat(3,1fr);}
+      #scr-welcome button.tile{aspect-ratio: 1 / 2;}
     }
