@@ -78,7 +78,7 @@
       background:#fff; color:var(--accent); border-color:var(--accent);
     }
 
-    .coach-footer{position:sticky; bottom:0; background:#0000ff; display:flex; gap:.5rem; padding:1rem 1rem 1rem; border-top:1px solid var(--border)}
+    .coach-footer{position:sticky; bottom:0; background:#007bff; display:flex; gap:.5rem; padding:1rem 1rem 1rem; border-top:1px solid var(--border)}
     .coach-input{flex:1; background:#fff; color:var(--text); border:none; border-radius:.7rem; padding:.7rem .9rem}
     .coach-input::placeholder{color:var(--muted)}
     .msg{margin:.5rem 0; padding:.6rem .7rem; border-radius:.6rem}
