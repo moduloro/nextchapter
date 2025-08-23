@@ -251,7 +251,7 @@
     }
 
     function addToolsSection(md){
-      const tools = '\n\n## Tools\n- [CV & LinkedIn Lab](cv.html)\n- [Application Tracker](tracker.html)\n- [Interview Simulator](interview.html)\n- [Financial Checklist](financial.html)\n';
+      const tools = '\n\n## Tools\n- [CV & LinkedIn Lab](cv.html)\n- [Application Tracker](tracker.html)\n- [Interview Simulator](interview.html)\n- [Financial Checklist](financial.html)\n- [Stress Management](stress.html)\n';
       if(!md) return tools.trimStart();
       return md.includes('## Tools') ? md : md.trimEnd() + tools;
     }
