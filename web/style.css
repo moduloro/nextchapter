@@ -148,6 +148,16 @@
       color:#000 !important;
     }
 
+    /* Phase chip on Today screen: blue background, white text and chevron, white border */
+    #scr-today #phase-chip {
+      background:var(--accent) !important;
+      border:1px solid #fff !important;
+      color:#fff !important;
+    }
+    #scr-today #phase-chip:after {
+      color:#fff !important;
+    }
+
     /* Primary button style: blue background with white border and text */
 .btn-primary{
   background:var(--accent) !important;
