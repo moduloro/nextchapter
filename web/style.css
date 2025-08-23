@@ -54,6 +54,7 @@
     .btn:focus-visible{outline:none; box-shadow:0 0 0 3px var(--focus), var(--shadow)}
     .btn.primary{background:#fff; color:var(--accent); border-color:var(--accent)}
     .btn.ghost{background:#fff; color:var(--accent); border-color:var(--accent); opacity:1}
+    a.btn{text-decoration:none}
 
     /* Coach panel */
     .coach-fab{position:fixed; right:20px; bottom:20px; z-index:90;} /* below coach panel */
