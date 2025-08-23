@@ -247,6 +247,10 @@
     fitWelcomeTiles();
     window.addEventListener('resize', fitWelcomeTiles);
 
+    }
+    fitWelcomeTiles();
+    window.addEventListener('resize', fitWelcomeTiles);
+
     // Reset (clear saved state)
     document.getElementById('reset').addEventListener('click', ()=>{
       localStorage.removeItem(stateKey);

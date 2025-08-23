@@ -18,7 +18,7 @@
     h1{font-size:clamp(1.8rem,3.2vw,2.4rem);line-height:1.15;margin:.2rem 0 .6rem}
     h2{font-size:clamp(1.2rem,2.5vw,1.6rem); margin:0 0 .4rem}
     .muted{color:var(--muted)}
-    .choices{display:flex; flex-wrap:wrap; gap:.6rem; justify-content:center; margin:.8rem 0 1rem}
+    .choices{display:flex; flex-wrap:wrap; gap:.6rem; justify-content:center; margin:.8rem 0 3rem}
     .screen{display:none}
     .screen.active{display:block}
     .intake{display:grid; gap:1rem}
@@ -175,7 +175,7 @@
     /* Tile-style call to actions on welcome screen */
     #scr-welcome .choices.tiles{
       display:grid;
-      gap:.6rem;
+      gap:1rem;
       grid-template-columns:1fr;
       width:100%;
       justify-self:stretch;
