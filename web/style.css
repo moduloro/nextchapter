@@ -30,7 +30,7 @@
     .pill{display:inline-flex; align-items:center; gap:.5rem; padding:.7rem 1rem; border-radius:999px; border:2px solid var(--accent); cursor:pointer; background:#fff; color:var(--accent)}
     .today{display:grid; gap:.8rem}
 
-    footer{margin-top:2rem; text-align:center; font-size:12pt; color:#666}
+    footer{margin-top:2rem; text-align:center; font-size:8pt; color:#CCC}
 
     /* Phase chip as button with caret */
     .phase{
