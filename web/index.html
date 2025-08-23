@@ -425,8 +425,26 @@ function fitWelcomeTiles(){
       // Clear out old plan immediately and show loading state
       planStatus.textContent = 'Generating weekly plan…';
       planMd.innerHTML = '';
+      // Reset coach panel so stale content isn't shown
+      const activeTool = document.querySelector('.coach-tools .btn.active');
+      if (activeTool) {
+        coachOut.innerHTML = '<em>Generating…</em>';
+      } else {
+        coachOut.innerHTML = '';
+      }
+      lastContext = null;
+      setPagerVisible(false);
       closePhasePop();
       await initToday(); // refresh plan + tasks
+      // If a tool was active, regenerate it with updated phase
+      if (activeTool) {
+        const kind = activeTool.dataset.kind;
+        const note = (kind === 'triage') ? 'Use Emotional Spike format.' : '';
+        let md = await callCoach(kind, userState, note);
+        if (['plan','standup','gate'].includes(kind)) md = addToolsSection(md);
+        lastContext = { kind, md };
+        renderPaged(md, coachOut);
+      }
     });
 
     // ---------- Coach panel (quick tools + chat) ----------
