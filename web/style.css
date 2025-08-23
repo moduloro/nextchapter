@@ -81,12 +81,12 @@
     .msg{margin:.5rem 0; padding:.6rem .7rem; border-radius:.6rem; position:relative}
     .msg-user{background:#d9eafc}
     .msg-user::after{
-      content:""; position:absolute; bottom:0; right:-8px; width:0; height:0;
+      content:""; position:absolute; bottom:8px; right:-8px; width:0; height:0;
       border-top:8px solid transparent; border-bottom:8px solid transparent; border-left:8px solid #d9eafc;
     }
     .msg-coach{background:#f6f6f6}
     .msg-coach::after{
-      content:""; position:absolute; bottom:0; left:-8px; width:0; height:0;
+      content:""; position:absolute; bottom:8px; left:-8px; width:0; height:0;
       border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:8px solid #f6f6f6;
     }
 
