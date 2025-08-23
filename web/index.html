@@ -422,6 +422,9 @@ function fitWelcomeTiles(){
       userState.current_phase = phases.includes(p) ? p : 'stabilize';
       userState.week_in_phase = w;
       persist();
+      // Clear out old plan immediately and show loading state
+      planStatus.textContent = 'Generating weekly plan…';
+      planMd.innerHTML = '';
       closePhasePop();
       await initToday(); // refresh plan + tasks
     });
