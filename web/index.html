@@ -152,22 +152,22 @@
       <article class="card panel">
         <h3>CV & LinkedIn Lab</h3>
         <p class="muted">Evidence-led improvements, fast.</p>
-        <button class="btn">Open</button>
+        <a class="btn" href="cv.html">Open</a>
       </article>
       <article class="card panel">
         <h3>Application Tracker</h3>
         <p class="muted">Keep momentum with follow-ups.</p>
-        <button class="btn">Open</button>
+        <a class="btn" href="tracker.html">Open</a>
       </article>
       <article class="card panel">
         <h3>Interview Simulator</h3>
         <p class="muted">Practice senior-level prompts.</p>
-        <button class="btn">Start</button>
+        <a class="btn" href="interview.html">Start</a>
       </article>
       <article class="card panel">
         <h3>Financial Checklist</h3>
         <p class="muted">ALV, health, pension — step-by-step.</p>
-        <button class="btn">Download</button>
+        <a class="btn" href="financial.html">Download</a>
       </article>
     </div>
   </div>
@@ -543,6 +543,10 @@
     const closeLib = document.getElementById('close-drawer');
     openLib.onclick = ()=>{ drawer.classList.add('open'); openLib.setAttribute('aria-expanded','true'); };
     closeLib.onclick = ()=>{ drawer.classList.remove('open'); openLib.setAttribute('aria-expanded','false'); };
+    if (location.hash === '#tools') {
+      drawer.classList.add('open');
+      openLib.setAttribute('aria-expanded','true');
+    }
 
     // ---------- API calls ----------
     async function callCoach(kind, state, note){
