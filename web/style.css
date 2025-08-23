@@ -47,7 +47,7 @@
     /* Buttons — readable in dark & light */
     .btn{
       appearance:none; border:2px solid var(--accent); background:#fff; color:var(--accent);
-      border-radius:999px; padding:.8rem 1.1rem; font-weight:700; letter-spacing:.01em; cursor:pointer;
+      border-radius:999px; padding:.35rem 1.1rem; font-weight:700; letter-spacing:.01em; cursor:pointer;
       transition:background .15s ease, opacity .15s ease;
     }
     .btn:hover{opacity:.98}
