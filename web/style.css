@@ -78,13 +78,13 @@
     .coach-footer{position:sticky; bottom:0; background:#007bff; display:flex; gap:.5rem; padding:1rem 1rem 1rem; border-top:1px solid var(--border)}
     .coach-input{flex:1; background:#fff; color:var(--text); border:none; border-radius:.7rem; padding:.7rem .9rem}
     .coach-input::placeholder{color:var(--muted)}
-    .msg{margin:.5rem 0; padding:.6rem .7rem; border-radius:.6rem; position:relative}
-    .msg-user{background:#d9eafc}
+    .msg{margin:.5rem 0; padding:.6rem .7rem; border-radius:.6rem; position:relative; width:90%}
+    .msg-user{background:#d9eafc; margin-left:auto; margin-right:0}
     .msg-user::after{
       content:""; position:absolute; bottom:8px; right:-8px; width:0; height:0;
       border-top:8px solid transparent; border-bottom:8px solid transparent; border-left:8px solid #d9eafc;
     }
-    .msg-coach{background:#f6f6f6}
+    .msg-coach{background:#f6f6f6; margin-right:auto; margin-left:0}
     .msg-coach::after{
       content:""; position:absolute; bottom:8px; left:-8px; width:0; height:0;
       border-top:8px solid transparent; border-bottom:8px solid transparent; border-right:8px solid #f6f6f6;
