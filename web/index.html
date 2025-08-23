@@ -429,12 +429,19 @@
       fab.setAttribute('aria-expanded','true');
       fab.hidden = true; // hide FAB so it can’t overlap
       setActiveTool(null); // default to free chat view
+      // move focus inside the panel so hidden trigger doesn't retain focus
+      setTimeout(()=>{
+        const input = document.getElementById('coach-input');
+        (input || coachClose).focus();
+      }, 0);
     }
     function closeCoach(){
+      // return focus to the FAB before hiding the panel to avoid aria-hidden conflicts
+      fab.hidden = false;
+      fab.setAttribute('aria-expanded','false');
+      fab.focus();
       coach.classList.remove('open');
       coach.setAttribute('aria-hidden','true');
-      fab.setAttribute('aria-expanded','false');
-      fab.hidden = false;
     }
     fab.onclick = openCoach; document.getElementById('btn-open-coach').onclick = openCoach; coachClose.onclick = closeCoach;
 
