@@ -83,6 +83,7 @@
           </div>
         </div>
         <details class="more"><summary>Show weekly plan</summary>
+          <div id="plan-status" class="muted" style="margin-top:.6rem"></div>
           <div id="plan-md" class="muted" style="margin-top:.6rem"></div>
         </details>
       </div>
@@ -299,6 +300,7 @@ function fitWelcomeTiles(){
     const phaseChip = document.getElementById('phase-chip');
     const todoList  = document.getElementById('todo-list');
     const planMd    = document.getElementById('plan-md');
+    const planStatus = document.getElementById('plan-status');
 
     async function initToday(){
       const phaseLabel = (typeof cap === "function")
@@ -307,10 +309,13 @@ function fitWelcomeTiles(){
       phaseChip.textContent = `${phaseLabel} · Week ${userState.week_in_phase || 1}`;
       show(scrToday);
 
+      planStatus.textContent = 'Generating weekly plan…';
+      planMd.innerHTML = '';
       const plan = await callCoach('plan', userState, 'Return a Weekly Plan; include a section starting with "Do today (90/30/15)".');
       const planWithTools = addToolsSection(plan);
       renderMarkdown(planWithTools, planMd);
       renderDoToday(planWithTools);
+      planStatus.textContent = '';
     }
 
     // Robust task extraction
