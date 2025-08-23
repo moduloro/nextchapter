@@ -230,6 +230,23 @@
     const scrToday   = document.getElementById('scr-today');
     function show(id){ [scrWelcome,scrIntake,scrToday].forEach(s=>s.classList.remove('active')); id.classList.add('active'); }
 
+    function fitWelcomeTiles(){
+      const labels = Array.from(document.querySelectorAll('#scr-welcome .tile .label'));
+      labels.forEach(l => l.style.fontSize = '');
+      let smallest = Infinity;
+      labels.forEach(label => {
+        let size = parseFloat(getComputedStyle(label).fontSize);
+        while (label.scrollWidth > label.clientWidth && size > 8) {
+          size -= 1;
+          label.style.fontSize = size + 'px';
+        }
+        smallest = Math.min(smallest, size);
+      });
+      labels.forEach(label => { label.style.fontSize = smallest + 'px'; });
+    }
+    fitWelcomeTiles();
+    window.addEventListener('resize', fitWelcomeTiles);
+
     // Reset (clear saved state)
     document.getElementById('reset').addEventListener('click', ()=>{
       localStorage.removeItem(stateKey);
