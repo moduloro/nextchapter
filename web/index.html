@@ -230,6 +230,19 @@
     const scrToday   = document.getElementById('scr-today');
     function show(id){ [scrWelcome,scrIntake,scrToday].forEach(s=>s.classList.remove('active')); id.classList.add('active'); }
 
+    function fitWelcomeTiles(){
+      document.querySelectorAll('#scr-welcome .tile .label').forEach(label => {
+        label.style.fontSize = '';
+        let size = parseFloat(getComputedStyle(label).fontSize);
+        while(label.scrollWidth > label.clientWidth && size > 8){
+          size -= 1;
+          label.style.fontSize = size + 'px';
+        }
+      });
+    }
+    fitWelcomeTiles();
+    window.addEventListener('resize', fitWelcomeTiles);
+
     // Reset (clear saved state)
     document.getElementById('reset').addEventListener('click', ()=>{
       localStorage.removeItem(stateKey);
