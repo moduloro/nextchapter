@@ -132,10 +132,6 @@
     </div>
     <div class="coach-body">
       <div id="coach-output" class="coach-output" aria-live="polite"></div>
-      <div class="coach-pager" id="coach-pager">
-        <button id="pg-prev" class="btn ghost" disabled>Back</button>
-        <button id="pg-next" class="btn" disabled>Next</button>
-      </div>
     </div>
     <form class="coach-footer" id="coach-form">
       <input id="coach-input" class="coach-input" type="text" autocomplete="off" placeholder="Type a question… (Enter to send, Shift+Enter for newline)" />
@@ -433,7 +429,6 @@ function fitWelcomeTiles(){
         coachOut.innerHTML = '';
       }
       lastContext = null;
-      setPagerVisible(false);
       closePhasePop();
       await initToday(); // refresh plan + tasks
       // If a tool was active, regenerate it with updated phase
@@ -443,7 +438,7 @@ function fitWelcomeTiles(){
         let md = await callCoach(kind, userState, note);
         if (['plan','standup','gate'].includes(kind)) md = addToolsSection(md);
         lastContext = { kind, md };
-        renderPaged(md, coachOut);
+        renderCoach(md);
       }
     });
 
@@ -452,9 +447,10 @@ function fitWelcomeTiles(){
     const coach = document.getElementById('coach');
     const coachClose = document.getElementById('coach-close');
     const coachOut = document.getElementById('coach-output');
-    const btnPrev = document.getElementById('pg-prev');
-    const btnNext = document.getElementById('pg-next');
-    const pagerWrap = document.getElementById('coach-pager');
+    function renderCoach(md){
+      renderMarkdown(md, coachOut);
+      coachOut.scrollTop = 0;
+    }
 
     // Active tool helpers
     const toolButtons = Array.from(document.querySelectorAll('.coach-tools .btn'));
@@ -498,30 +494,9 @@ function fitWelcomeTiles(){
         let md = await callCoach(kind, userState, note);
         if(['plan','standup','gate'].includes(kind)) md = addToolsSection(md);
         lastContext = { kind, md };              // store panel context
-        renderPaged(md, coachOut);
+        renderCoach(md);
       });
     });
-
-    function setPagerVisible(on){ pagerWrap.style.display = on ? 'flex' : 'none'; }
-
-    function renderPaged(md, container){
-      setPagerVisible(true);
-      container.innerHTML='';
-      const parts = (md && md.match(/\n##? /)) ? md.split(/\n(?=##?\s)/g) : [md || 'No content.'];
-      const pages = parts.map(p => DOMPurify.sanitize(marked.parse(p)));
-      pages.forEach((html,i)=>{
-        const div = document.createElement('div');
-        div.className='page'+(i===0?' active':'');
-        div.innerHTML = html;
-        container.appendChild(div);
-      });
-      let idx=0; const nodes = [...container.querySelectorAll('.page')];
-      function sync(){ nodes.forEach((n,i)=>n.classList.toggle('active', i===idx)); btnPrev.disabled = (idx===0); btnNext.disabled = (idx===nodes.length-1); }
-      btnPrev.onclick = ()=>{ idx=Math.max(0,idx-1); sync(); };
-      btnNext.onclick = ()=>{ idx=Math.min(nodes.length-1,idx+1); sync(); };
-      sync();
-      container.scrollTop = 0;
-    }
 
     // Chat composer
     const form = document.getElementById('coach-form');
@@ -552,7 +527,6 @@ function fitWelcomeTiles(){
     });
 
     function appendChat(role, mdOrText){
-      setPagerVisible(false);
       const div = document.createElement('div');
       div.className = `msg msg-${role}`;
       const html = role === 'user'
@@ -599,7 +573,7 @@ function fitWelcomeTiles(){
       let md = await callCoach('standup', userState, 'Keep it tight.');
       md = addToolsSection(md);
       lastContext = { kind: 'standup', md };
-      renderPaged(md, coachOut);
+      renderCoach(md);
     });
 
     // ---------- Library drawer ----------
