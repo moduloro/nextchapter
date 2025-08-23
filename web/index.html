@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body style="display:none">
   <div class="wrap">
     <header>
       <a class="logo" href="#"><span class="mark">N</span> NextChapter</a>
@@ -189,7 +189,14 @@
 
   <footer>Last updated by Codex <span id="deploy-time"></span></footer>
   <script>
-    document.getElementById('deploy-time').textContent = new Date(document.lastModified).toLocaleString();
+      const enteredPassword = prompt('Enter password:');
+      if (enteredPassword !== 'newCareer25!') {
+        document.body.innerHTML = '<h1>Access denied</h1>';
+        document.body.style.display = '';
+        throw new Error('Unauthorized');
+      }
+      document.body.style.display = '';
+      document.getElementById('deploy-time').textContent = new Date(document.lastModified).toLocaleString();
     // ---------- Config & Utilities ----------
     const API_BASE = "/"; // same-origin with Flask
     const stateKey = "jtbd_state_v1";
