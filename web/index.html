@@ -189,11 +189,17 @@
 
   <footer>Last updated by Codex <span id="deploy-time"></span></footer>
   <script>
-      const enteredPassword = prompt('Enter password:');
-      if (enteredPassword !== 'newCareer25!') {
-        document.body.innerHTML = '<h1>Access denied</h1>';
-        document.body.style.display = '';
-        throw new Error('Unauthorized');
+      const PASSWORD_KEY = 'jtbd_pwd';
+      const VALID_PASSWORD = 'newCareer25!';
+      let stored = sessionStorage.getItem(PASSWORD_KEY);
+      if (stored !== VALID_PASSWORD) {
+        stored = prompt('Enter password:');
+        if (stored !== VALID_PASSWORD) {
+          document.body.innerHTML = '<h1>Access denied</h1>';
+          document.body.style.display = '';
+          throw new Error('Unauthorized');
+        }
+        sessionStorage.setItem(PASSWORD_KEY, stored);
       }
       document.body.style.display = '';
       document.getElementById('deploy-time').textContent = new Date(document.lastModified).toLocaleString();
