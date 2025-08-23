@@ -68,9 +68,6 @@
     .coach-tools{display:flex; gap:.5rem; padding:.6rem 1rem; border-bottom:1px solid var(--border); flex-wrap:wrap}
     .coach-body{padding:1rem; overflow:auto}
     .coach-output{background:var(--card); border:none; border-radius:.8rem; padding:1rem}
-    .coach-output > .page{display:none}
-    .coach-output > .page.active{display:block}
-    .coach-pager{display:flex; justify-content:space-between; gap:.6rem; padding-top:.6rem}
 
     /* Active tool style */
     .coach-tools .btn{ background:#fff; color:var(--accent); border-color:var(--accent); }
