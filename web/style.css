@@ -60,7 +60,7 @@
     .coach-fab{position:fixed; right:20px; bottom:20px; z-index:90;} /* below coach panel */
     .coach-panel{
       position:fixed; top:0; right:0; height:100%; width:min(560px,96vw); background:var(--surface);
-      border-left:1px solid var(--border); box-shadow:var(--shadow); transform:translateX(100%); transition:.25s ease; z-index:110;
+      border-left:1px solid var(--border); box-shadow:-8px 0 16px rgba(0,0,0,.25); transform:translateX(100%); transition:.25s ease; z-index:110;
       display:grid; grid-template-rows:auto auto 1fr auto;
     }
     .coach-panel.open{transform:translateX(0)}
