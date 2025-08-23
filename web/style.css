@@ -79,10 +79,10 @@
     .coach-input{flex:1; background:#fff; color:var(--text); border:none; border-radius:.7rem; padding:.7rem .9rem}
     .coach-input::placeholder{color:var(--muted)}
     .msg{margin:.5rem 0; padding:.6rem .7rem; border-radius:.6rem; position:relative}
-    .msg-user{background:#b5d9ff}
+    .msg-user{background:#d9eafc}
     .msg-user::after{
       content:""; position:absolute; bottom:0; right:-8px; width:0; height:0;
-      border-top:8px solid transparent; border-bottom:8px solid transparent; border-left:8px solid #b5d9ff;
+      border-top:8px solid transparent; border-bottom:8px solid transparent; border-left:8px solid #d9eafc;
     }
     .msg-coach{background:#f6f6f6}
     .msg-coach::after{
