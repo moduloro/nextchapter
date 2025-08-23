@@ -158,3 +158,28 @@
       border:1px solid #000 !important;
       color:#fff !important;
     }
+
+    /* Tile-style call to actions on welcome screen */
+    .choices.tiles{
+      display:grid;
+      gap:.6rem;
+      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    }
+
+    button.tile{
+      position:relative;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      height:140px;
+      padding:1rem;
+      border-radius:1rem;
+      cursor:pointer;
+      background-image:var(--bg) !important;
+      background-size:cover !important;
+      background-position:center !important;
+      color:#fff !important;
+      border:1px solid #000 !important;
+      text-shadow:0 1px 2px rgba(0,0,0,.6);
+      font-weight:700;
+    }
