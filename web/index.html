@@ -52,13 +52,43 @@
           </div>
           <div class="row" role="group" aria-label="Where are you?">
             <span class="label">Where are you?</span>
-            <button class="chip" data-stage="stabilize">Stabilize</button>
-            <button class="chip" data-stage="reframe">Reframe</button>
-            <button class="chip" data-stage="position">Position</button>
-            <button class="chip" data-stage="explore">Explore</button>
-            <button class="chip" data-stage="apply">Apply</button>
-            <button class="chip" data-stage="secure">Secure</button>
-            <button class="chip" data-stage="transition">Transition</button>
+            <div class="stage-flow">
+              <button class="chip stage" data-stage="stabilize">
+                <span class="circle">🛟</span>
+                <span class="title">Stabilize</span>
+                <span class="subtitle">Catch your breath</span>
+              </button>
+              <button class="chip stage" data-stage="reframe">
+                <span class="circle">💡</span>
+                <span class="title">Reframe</span>
+                <span class="subtitle">Shift perspective</span>
+              </button>
+              <button class="chip stage" data-stage="position">
+                <span class="circle">🎯</span>
+                <span class="title">Position</span>
+                <span class="subtitle">Shape your story</span>
+              </button>
+              <button class="chip stage" data-stage="explore">
+                <span class="circle">🧭</span>
+                <span class="title">Explore</span>
+                <span class="subtitle">Find paths</span>
+              </button>
+              <button class="chip stage" data-stage="apply">
+                <span class="circle">📮</span>
+                <span class="title">Apply</span>
+                <span class="subtitle">Send apps</span>
+              </button>
+              <button class="chip stage" data-stage="secure">
+                <span class="circle">🤝</span>
+                <span class="title">Secure</span>
+                <span class="subtitle">Land offer</span>
+              </button>
+              <button class="chip stage" data-stage="transition">
+                <span class="circle">🚀</span>
+                <span class="title">Transition</span>
+                <span class="subtitle">Start new role</span>
+              </button>
+            </div>
             <button class="chip" data-stage="unsure">Not sure</button>
           </div>
           <button id="btn-next-step" class="btn primary">Get my next step</button>
@@ -280,7 +310,7 @@ function fitWelcomeTiles(){
         b.addEventListener('click', (e)=>{
           const v = e.currentTarget.dataset[key];
           tmp[key]=v;
-          const group = e.currentTarget.parentElement;
+          const group = e.currentTarget.closest('[role="group"]');
           group.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed','false'));
           e.currentTarget.setAttribute('aria-pressed','true');
           updateNextStepButton();
