@@ -159,17 +159,16 @@
       color:#fff !important;
     }
 
-    /* Welcome screen without card border or shadow */
-    #scr-welcome .card{
+    /* "scr-" screens: remove card borders/shadows and apply gray background */
+    [id^="scr-"] .card{
+      background:#eee;
       border:none;
       box-shadow:none;
     }
 
-    /* Today's screen without card border or shadow */
-    #scr-today .card{
-      border:none;
-      box-shadow:none;
-      background:#DDD;
+    /* Home screen uses white card background */
+    #scr-welcome .card{
+      background:#fff;
     }
 
     /* Tile-style call to actions on welcome screen */
