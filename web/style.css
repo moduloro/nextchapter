@@ -163,7 +163,11 @@
     .choices.tiles{
       display:grid;
       gap:.6rem;
-      grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      grid-template-columns:1fr;
+    }
+
+    @media (min-width:600px){
+      .choices.tiles{grid-template-columns:repeat(3,1fr);}
     }
 
     button.tile{
