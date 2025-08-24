@@ -154,7 +154,6 @@ def reset_password():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 @app.post("/plan")
 def plan():
     try:
