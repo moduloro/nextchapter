@@ -133,7 +133,7 @@
     }
     .phase-card h3{margin:.1rem 0 .2rem}
     .form-row{display:grid; gap:.3rem}
-    .select, .number{
+    .select, .number, .input{
       appearance:none; width:100%; background:var(--surface); color:var(--text);
       border:1px solid var(--border); border-radius:.6rem; padding:.6rem .7rem;
     }
