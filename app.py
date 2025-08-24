@@ -118,6 +118,43 @@ def login():
         sess.close()
 
 
+# Forgot password
+@app.post("/forgot_password")
+def forgot_password():
+    """
+    Accepts JSON: { "email": "user@example.com" }
+    Always returns a generic success message without revealing whether the user exists.
+    If the user exists, creates a reset token (purpose='reset', default TTL 60m) and emails the link.
+    """
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+
+    # Always return generic success to avoid user enumeration
+    generic_ok = jsonify({"ok": True, "message": "If the account exists, a reset email has been sent."})
+
+    if not email:
+        # Still return generic to avoid enumeration
+        return generic_ok, 200
+
+    sess = get_session()
+    try:
+        user = find_user_by_email(sess, email)
+        if user:
+            token = secrets.token_urlsafe(24)
+            # 60 minutes default TTL; adjust as desired
+            issue_token(sess, user, token=token, purpose="reset", ttl_minutes=60)
+            sess.commit()
+            try:
+                send_password_reset_email(email, token)
+            except Exception as e:
+                # Do not leak details to the client
+                print(f"[forgot_password] email send failed for {email}: {e}")
+        # Always return generic success
+        return generic_ok, 200
+    finally:
+        sess.close()
+
+
 # --- Load system prompt (fallback if missing/empty) ---
 SP_PATH = os.path.join(os.path.dirname(__file__), "system_prompt.md")
 DEFAULT_SYSTEM = (
