@@ -8,11 +8,8 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <link rel="stylesheet" href="style.css">
-  <style>
-  .phase.active { font-weight: 700; text-decoration: underline; }
-  </style>
 </head>
-<body style="display:none">
+<body id="app-root" data-current-phase="explore" style="display:none">
   <div class="wrap">
     <header>
       <a class="logo" href="#"><span class="mark">N</span> NextChapter</a>
@@ -25,15 +22,6 @@
         </div>
       </div>
     </header>
-
-    <ul id="phase-choices">
-      <li data-phase="explore" class="phase">Explore</li>
-      <li data-phase="apply" class="phase">Apply</li>
-      <li data-phase="interview" class="phase">Interview</li>
-      <li data-phase="offer" class="phase">Offer</li>
-      <li data-phase="decide" class="phase">Decide</li>
-      <li data-phase="onboard" class="phase">Onboard</li>
-    </ul>
 
     <!-- Screen 1: Welcome -->
     <section id="scr-welcome" class="screen active">
@@ -117,7 +105,7 @@
       <div class="card panel today">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem">
           <!-- Phase pill is a button -->
-          <button id="phase-chip" class="phase" type="button" aria-haspopup="dialog" aria-expanded="false">Phase · Week</button>
+          <button id="phase-chip" class="phase" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="phase-pill-label">Phase</span> · Week</button>
           <button id="btn-standup" class="btn ghost">Daily check-in</button>
         </div>
         <div class="todo">
@@ -141,15 +129,15 @@
     <div class="phase-card">
       <h3 id="phase-pop-title">Adjust phase & week</h3>
       <div class="form-row">
-        <label for="phase-select" class="label">Phase</label>
-        <select id="phase-select" class="select">
-          <option value="stabilize">Stabilize</option>
-          <option value="reframe">Reframe</option>
-          <option value="position">Position</option>
-          <option value="explore">Explore</option>
-          <option value="apply">Apply</option>
-          <option value="secure">Secure</option>
-          <option value="transition">Transition</option>
+        <label for="intake-phase" class="label">Phase</label>
+        <select id="intake-phase" class="select">
+          <option value="stabilize" class="pill-option" data-phase="stabilize">Stabilize</option>
+          <option value="reframe" class="pill-option" data-phase="reframe">Reframe</option>
+          <option value="position" class="pill-option" data-phase="position">Position</option>
+          <option value="explore" class="pill-option" data-phase="explore">Explore</option>
+          <option value="apply" class="pill-option" data-phase="apply">Apply</option>
+          <option value="secure" class="pill-option" data-phase="secure">Secure</option>
+          <option value="transition" class="pill-option" data-phase="transition">Transition</option>
         </select>
       </div>
       <div class="form-row">
@@ -353,7 +341,7 @@ function fitWelcomeTiles(){
       const phaseLabel = (typeof cap === "function")
         ? cap(userState.current_phase || 'stabilize')
         : (userState.current_phase || 'stabilize');
-      phaseChip.textContent = `${phaseLabel} · Week ${userState.week_in_phase || 1}`;
+      phaseChip.innerHTML = `<span id="phase-pill-label">${phaseLabel}</span> · Week ${userState.week_in_phase || 1}`;
       show(scrToday);
 
       planStatus.textContent = 'Generating weekly plan…';
@@ -406,7 +394,7 @@ function fitWelcomeTiles(){
 
     // ---------- Phase popover logic ----------
     const phasePop = document.getElementById('phase-pop');
-    const phaseSelect = document.getElementById('phase-select');
+    const phaseSelect = document.getElementById('intake-phase');
     const weekInput = document.getElementById('week-input');
     const phaseCancel = document.getElementById('phase-cancel');
     const phaseSave = document.getElementById('phase-save');
