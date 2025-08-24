@@ -13,6 +13,8 @@ from auth_utils import (
 
 # --- Load config ---
 load_dotenv()
+from db import init_db
+init_db()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("MODEL", "gpt-4o-mini")          # safe default
 FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "gpt-4o-mini")

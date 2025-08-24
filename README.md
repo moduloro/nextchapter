@@ -46,3 +46,8 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - Verification link format: GET `/verify?token=...`
 - In `ENV=development`, any non-empty token is accepted by the stub
 - Real implementations should replace `validate_verification_token()` and `mark_user_verified()` with DB-backed logic
+
+## Database
+- Set `DATABASE_URL` in Render to your Postgres connection string
+- Tables are auto-created on startup (no migrations yet)
+- We’ll wire real token + user operations in subsequent steps
