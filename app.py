@@ -1,5 +1,5 @@
 import os, json, traceback
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template_string
 from dotenv import load_dotenv
 from openai import OpenAI
 from mailer import send_mail, send_password_reset_email
@@ -184,6 +184,56 @@ def chat():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+    
+
+@app.get("/reset")
+def reset_view():
+    """
+    Placeholder reset page. Reads ?token=... and renders a basic form shell.
+    Real token validation + password change will be implemented later.
+    """
+    token = request.args.get("token", "")
+    html = """
+    <html>
+      <head><title>Reset your password</title></head>
+      <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px; margin: 40px auto;">
+        <h1>Reset your password</h1>
+        {% if token %}
+          <p>We received your reset request. Token:</p>
+          <pre style="background:#f6f8fa;padding:12px;border-radius:8px">{{ token }}</pre>
+          <p>This is a placeholder screen. Implement the real password-change form here.</p>
+        {% else %}
+          <p><strong>Missing token.</strong> This page expects a <code>?token=...</code> parameter.</p>
+        {% endif %}
+      </body>
+    </html>
+    """
+    return render_template_string(html, token=token)
+
+
+@app.get("/verify")
+def verify_view():
+    """
+    Placeholder verify page. Reads ?token=... and renders confirmation.
+    Real verification flow will be implemented later.
+    """
+    token = request.args.get("token", "")
+    html = """
+    <html>
+      <head><title>Verify your email</title></head>
+      <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px; margin: 40px auto;">
+        <h1>Verify your email</h1>
+        {% if token %}
+          <p>Thanks! We received your verification token:</p>
+          <pre style="background:#f6f8fa;padding:12px;border-radius:8px">{{ token }}</pre>
+          <p>This is a placeholder screen. Implement real verification logic here.</p>
+        {% else %}
+          <p><strong>Missing token.</strong> This page expects a <code>?token=...</code> parameter.</p>
+        {% endif %}
+      </body>
+    </html>
+    """
+    return render_template_string(html, token=token)
 
 
 @app.get("/_mail_test")
