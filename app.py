@@ -1,4 +1,5 @@
-import os, json, traceback
+import os, json, traceback, smtplib
+from email.message import EmailMessage
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -106,7 +107,53 @@ def get_state_from_request(req):
     note = data.get("note", "")
     return user_state, note
 
+def send_reset_email(to_email):
+    """Send a password reset email using SMTP credentials if configured."""
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USERNAME")
+    smtp_password = os.getenv("SMTP_PASSWORD")
+    sender = os.getenv("RESET_EMAIL_FROM", smtp_user or "noreply@example.com")
+    body = os.getenv(
+        "RESET_EMAIL_BODY",
+        "Use the following link to reset your password: https://example.com/reset"
+    )
+    if not smtp_host:
+        print(f"[reset-password] SMTP not configured; would send to {to_email}")
+        return False
+    msg = EmailMessage()
+    msg["Subject"] = "Password Reset"
+    msg["From"] = sender
+    msg["To"] = to_email
+    msg.set_content(body)
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            if smtp_user:
+                server.login(smtp_user, smtp_password)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print("Error sending reset email:", e)
+        return False
+
 # --- Endpoints ---
+@app.post("/reset-password")
+def reset_password():
+    try:
+        data = request.get_json(silent=True) or {}
+        email = (data.get("email") or "").strip()
+        if not email:
+            return jsonify({"error": "Email required"}), 400
+        sent = send_reset_email(email)
+        if sent:
+            return jsonify({"sent": True, "message": "Reset email sent"})
+        else:
+            return jsonify({"sent": False, "error": "Email service not configured"}), 500
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
 @app.post("/plan")
 def plan():
     try:
