@@ -10,10 +10,11 @@ from auth_utils import (
     validate_verification_token,
     mark_user_verified,
 )
+from sqlalchemy import text
 
 # --- Load config ---
 load_dotenv()
-from db import init_db
+from db import init_db, SessionLocal
 init_db()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("MODEL", "gpt-4o-mini")          # safe default
@@ -43,6 +44,19 @@ def health():
         ok = False
         details["error"] = str(e)
     return jsonify({"ok": ok, "details": details})
+
+
+@app.get("/db_health")
+def db_health():
+    sess = SessionLocal()
+    try:
+        result = sess.execute(
+            text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'")
+        )
+        tables = [row[0] for row in result]
+        return jsonify({"tables": tables})
+    finally:
+        sess.close()
 
 # --- Load system prompt (fallback if missing/empty) ---
 SP_PATH = os.path.join(os.path.dirname(__file__), "system_prompt.md")
