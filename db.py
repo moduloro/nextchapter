@@ -5,6 +5,7 @@ from typing import Optional, Literal
 from sqlalchemy import (
     create_engine, Column, Integer, String, Boolean, DateTime, ForeignKey, Index, text
 )
+from sqlalchemy import inspect
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
@@ -24,6 +25,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=True)  # may be None until set
     is_verified = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    phase = Column(String(50), default="explore", nullable=False)
 
     tokens = relationship("EmailToken", back_populates="user", cascade="all, delete-orphan")
 
@@ -47,6 +49,16 @@ Index("ix_email_tokens_active", EmailToken.token, EmailToken.purpose)
 def init_db() -> None:
     """Create tables if they don't exist."""
     Base.metadata.create_all(engine)
+    _ensure_phase_column()
+
+
+def _ensure_phase_column():
+    insp = inspect(engine)
+    cols = [c["name"] for c in insp.get_columns("users")]
+    if "phase" not in cols:
+        with engine.begin() as conn:
+            # Postgres + SQLite compatible syntax
+            conn.execute(text("ALTER TABLE users ADD COLUMN phase VARCHAR(50) NOT NULL DEFAULT 'explore'"))
 
 
 def get_session() -> Session:

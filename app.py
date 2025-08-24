@@ -113,10 +113,58 @@ def login():
         if not user.password_hash or not check_password_hash(user.password_hash, password):
             return jsonify({"ok": False, "error": "Invalid credentials"}), 403
 
-        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email}}), 200
+        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}}), 200
     finally:
         sess.close()
 
+# --- User phase helpers ---
+
+@app.get("/me")
+def me():
+    """
+    TEMP (no sessions yet): Accepts ?email=... and returns { id, email, phase }.
+    In production replace with session/JWT-based identity.
+    """
+    email = (request.args.get("email") or "").strip().lower()
+    if not email:
+        return jsonify({"ok": False, "error": "email required"}), 400
+    sess = get_session()
+    try:
+        user = find_user_by_email(sess, email)
+        if not user:
+            return jsonify({"ok": False, "error": "not found"}), 404
+        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}})
+    finally:
+        sess.close()
+
+
+ALLOWED_PHASES = {"explore", "apply", "interview", "offer", "decide", "onboard"}
+
+
+@app.post("/phase")
+def set_phase():
+    """
+    TEMP (no sessions yet): Accepts JSON { email, phase } and updates user's phase.
+    Valid phases: explore, apply, interview, offer, decide, onboard.
+    """
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    phase = (data.get("phase") or "").strip().lower()
+
+    if not email or phase not in ALLOWED_PHASES:
+        return jsonify({"ok": False, "error": "invalid email or phase"}), 400
+
+    sess = get_session()
+    try:
+        user = find_user_by_email(sess, email)
+        if not user:
+            return jsonify({"ok": False, "error": "not found"}), 404
+        user.phase = phase
+        sess.add(user)
+        sess.commit()
+        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}})
+    finally:
+        sess.close()
 
 # Forgot password
 @app.post("/forgot_password")
