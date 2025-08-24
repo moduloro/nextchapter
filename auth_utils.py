@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from db import get_session, find_user_by_email, create_user, issue_token, validate_token, mark_token_used
 from werkzeug.security import generate_password_hash
 
 def validate_reset_token(token: str) -> Optional[dict]:
