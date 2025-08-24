@@ -232,8 +232,8 @@ def get_state_from_request(req):
 def reset_password():
     """Legacy endpoint to initiate a password reset email."""
     try:
-        data = request.get_json(silent=True) or {}
-        email = (data.get("email") or "").strip()
+        data = request.get_json(force=True)
+        email = (data.get("email") or "").strip().lower()
         if not email:
             return jsonify({"error": "Email required"}), 400
 
@@ -247,10 +247,7 @@ def reset_password():
             token = secrets.token_urlsafe(24)
             issue_token(sess, user, token, purpose="reset", ttl_minutes=60)
             sess.commit()
-            try:
-                send_password_reset_email(email, token)
-            except Exception:
-                traceback.print_exc()
+            send_password_reset_email(email, token)
             return generic_resp, 200
         finally:
             sess.close()
@@ -500,7 +497,7 @@ def _mail_test():
 def _mail_reset_test():
     """
     Dev-only helper: sends a password reset email to ?to=<email>
-    with a dummy or provided ?token=<token>. Enabled in non-production only.
+    with an optional ?token=<token>. Enabled in non-production only.
     """
     if os.getenv("ENV", "development").lower() == "production":
         return "Not available in production", 404
@@ -516,6 +513,7 @@ def _mail_reset_test():
         user = find_user_by_email(sess, to)
         if not user:
             user = create_user(sess, email=to)
+            sess.commit()
         issue_token(sess, user, token, purpose="reset", ttl_minutes=60)
         sess.commit()
         send_password_reset_email(to, token)
