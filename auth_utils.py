@@ -1,54 +1,112 @@
 import os
-from typing import Optional
-from db import get_session, find_user_by_email, create_user, issue_token, validate_token, mark_token_used
+from typing import Optional, Literal
 from werkzeug.security import generate_password_hash
+from db import get_session, validate_token, mark_token_used
+from db import SessionLocal  # if you prefer direct sessions
+from db import User  # for lookups/updates
 
 def validate_reset_token(token: str) -> Optional[dict]:
     """
-    Return a dict with user info (at least user_id and email) if token is valid.
-    Return None if invalid/expired.
-    DEV MODE: accept any non-empty token and map to a fake user.
+    Look up a reset token in the DB and return a user dict {user_id, email}
+    if valid (exists, not used, not expired). Return None if invalid.
+    In DEV (or no DATABASE_URL), accept any non-empty token and return a fake user.
     """
     token = (token or "").strip()
     if not token:
         return None
-    if os.getenv("ENV", "development").lower() == "development":
-        # Dev-only fake user; replace with real lookup later
+
+    # DEV fallback
+    if os.getenv("ENV", "development").lower() == "development" and not os.getenv("DATABASE_URL"):
         return {"user_id": 1, "email": "support@coro.biz"}
-    # TODO: implement real token lookup/expiry
-    return None
+
+    sess = get_session()
+    try:
+        t = validate_token(sess, token, "reset")
+        if not t:
+            return None
+        return {"user_id": t.user.id, "email": t.user.email}
+    finally:
+        sess.close()
 
 def hash_password(plain: str) -> str:
-    """Hash a password with werkzeug (PBKDF2)."""
     return generate_password_hash(plain)
 
 def set_user_password(user_id: int, password_hash: str) -> None:
     """
-    Persist the new password hash for the user in your data store.
-    DEV MODE: no-op (just print to logs). Replace with real DB write later.
+    Update users.password_hash in the DB.
+    In DEV (or no DB), log only.
     """
-    # TODO: implement DB update
-    print(f"[DEV] set_user_password(user_id={user_id}, hash={password_hash[:12]}...)")
+    if os.getenv("ENV", "development").lower() == "development" and not os.getenv("DATABASE_URL"):
+        print(f"[DEV] set_user_password(user_id={user_id}, hash={password_hash[:12]}...)")
+        return
+
+    sess = get_session()
+    try:
+        u = sess.get(User, user_id)
+        if not u:
+            raise ValueError("User not found")
+        u.password_hash = password_hash
+        sess.add(u)
+        sess.commit()
+    finally:
+        sess.close()
 
 
 def validate_verification_token(token: str) -> Optional[dict]:
     """
-    Return a dict with user info (at least user_id and email) if token is valid,
-    else None. DEV MODE: accept any non-empty token and map to a fake user.
+    DB-backed verification token check (see validate_reset_token for details).
     """
     token = (token or "").strip()
     if not token:
         return None
-    if os.getenv("ENV", "development").lower() == "development":
+
+    if os.getenv("ENV", "development").lower() == "development" and not os.getenv("DATABASE_URL"):
         return {"user_id": 1, "email": "support@coro.biz"}
-    # TODO: implement real verification token lookup and expiry
-    return None
+
+    sess = get_session()
+    try:
+        t = validate_token(sess, token, "verify")
+        if not t:
+            return None
+        return {"user_id": t.user.id, "email": t.user.email}
+    finally:
+        sess.close()
 
 
 def mark_user_verified(user_id: int) -> None:
     """
-    Persist 'email verified' for the user in your data store.
-    DEV MODE: no-op (just print). Replace with real DB write later.
+    Set users.is_verified = True in the DB.
+    In DEV (or no DB), log only.
     """
-    # TODO: implement DB update to mark verified_at / is_verified
-    print(f"[DEV] mark_user_verified(user_id={user_id})")
+    if os.getenv("ENV", "development").lower() == "development" and not os.getenv("DATABASE_URL"):
+        print(f"[DEV] mark_user_verified(user_id={user_id})")
+        return
+
+    sess = get_session()
+    try:
+        u = sess.get(User, user_id)
+        if not u:
+            raise ValueError("User not found")
+        u.is_verified = True
+        sess.add(u)
+        sess.commit()
+    finally:
+        sess.close()
+
+
+def consume_token(token: str, purpose: Literal["reset","verify"]) -> None:
+    """
+    Mark a token as used in the DB (no-op in DEV without DB).
+    """
+    if os.getenv("ENV", "development").lower() == "development" and not os.getenv("DATABASE_URL"):
+        print(f"[DEV] consume_token({purpose}): {token[:8]}...")
+        return
+
+    sess = get_session()
+    try:
+        t = validate_token(sess, token, purpose)
+        if t:
+            mark_token_used(sess, t)
+            sess.commit()
+    finally:
+        sess.close()
