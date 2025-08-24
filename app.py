@@ -3,6 +3,7 @@ from email.message import EmailMessage
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from openai import OpenAI
+from mailer import send_mail
 
 # --- Load config ---
 load_dotenv()
@@ -209,6 +210,17 @@ def chat():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+
+@app.get("/_mail_test")
+def _mail_test():
+    """Send a test email to verify SMTP is working."""
+    to = request.args.get("to", os.environ.get("EMAIL_FROM"))
+    try:
+        send_mail(to, "SMTP test", "If you read this, SMTP works.")
+        return "OK", 200
+    except Exception as e:
+        return str(e), 500
 
 if __name__ == "__main__":
     print(f"Starting JTBD Coach on http://localhost:{PORT} (model={MODEL}, fallback={FALLBACK_MODEL})")
