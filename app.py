@@ -133,19 +133,28 @@ def me():
         user = find_user_by_email(sess, email)
         if not user:
             return jsonify({"ok": False, "error": "not found"}), 404
-        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}})
+        phase = user.phase if user.phase in ALLOWED_PHASES else "stabilize"
+        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": phase}})
     finally:
         sess.close()
 
 
-ALLOWED_PHASES = {"explore", "apply", "interview", "offer", "decide", "onboard"}
+ALLOWED_PHASES = {
+    "stabilize",
+    "reframe",
+    "position",
+    "explore",
+    "apply",
+    "secure",
+    "transition",
+}
 
 
 @app.post("/phase")
 def set_phase():
     """
     TEMP (no sessions yet): Accepts JSON { email, phase } and updates user's phase.
-    Valid phases: explore, apply, interview, offer, decide, onboard.
+    Valid phases: stabilize, reframe, position, explore, apply, secure, transition.
     """
     data = request.get_json(silent=True) or {}
     email = (data.get("email") or "").strip().lower()
