@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, send_from_directory, render_template_
 from dotenv import load_dotenv
 from openai import OpenAI
 from mailer import send_mail, send_password_reset_email, send_verification_email
+from auth_utils import validate_reset_token, hash_password, set_user_password
 
 # --- Load config ---
 load_dotenv()
@@ -186,29 +187,70 @@ def chat():
         return jsonify({"error": str(e)}), 500
     
 
+RESET_FORM_HTML = """
+<html>
+  <head><title>Reset your password</title></head>
+  <body style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width:640px; margin:40px auto;">
+    <h1>Reset your password</h1>
+    {% if error %}<p style="color:#b00020">{{ error }}</p>{% endif %}
+    {% if not user %}
+      <p>Invalid or expired reset link.</p>
+    {% else %}
+      <form method="post" action="/reset">
+        <input type="hidden" name="token" value="{{ token }}">
+        <div style="margin:8px 0">
+          <label>New password</label><br>
+          <input type="password" name="password" minlength="8" required style="width:100%;padding:8px">
+        </div>
+        <div style="margin:8px 0">
+          <label>Confirm password</label><br>
+          <input type="password" name="confirm" minlength="8" required style="width:100%;padding:8px">
+        </div>
+        <button type="submit" style="padding:10px 16px;border-radius:8px;">Update password</button>
+      </form>
+    {% endif %}
+  </body>
+</html>
+"""
+
+RESET_SUCCESS_HTML = """
+<html>
+  <head><title>Password updated</title></head>
+  <body style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width:640px; margin:40px auto;">
+    <h1>Password updated</h1>
+    <p>Your password has been changed successfully. You can now sign in.</p>
+  </body>
+</html>
+"""
+
 @app.get("/reset")
 def reset_view():
-    """
-    Placeholder reset page. Reads ?token=... and renders a basic form shell.
-    Real token validation + password change will be implemented later.
-    """
     token = request.args.get("token", "")
-    html = """
-    <html>
-      <head><title>Reset your password</title></head>
-      <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px; margin: 40px auto;">
-        <h1>Reset your password</h1>
-        {% if token %}
-          <p>We received your reset request. Token:</p>
-          <pre style="background:#f6f8fa;padding:12px;border-radius:8px">{{ token }}</pre>
-          <p>This is a placeholder screen. Implement the real password-change form here.</p>
-        {% else %}
-          <p><strong>Missing token.</strong> This page expects a <code>?token=...</code> parameter.</p>
-        {% endif %}
-      </body>
-    </html>
-    """
-    return render_template_string(html, token=token)
+    user = validate_reset_token(token)
+    return render_template_string(RESET_FORM_HTML, token=token, user=user, error=None)
+
+
+@app.post("/reset")
+def reset_submit():
+    token = request.form.get("token", "")
+    password = request.form.get("password", "")
+    confirm = request.form.get("confirm", "")
+    user = validate_reset_token(token)
+
+    error = None
+    if not user:
+        error = "Invalid or expired token."
+    elif not password or len(password) < 8:
+        error = "Password must be at least 8 characters."
+    elif password != confirm:
+        error = "Passwords do not match."
+
+    if error:
+        return render_template_string(RESET_FORM_HTML, token=token, user=user, error=error), 400
+
+    phash = hash_password(password)
+    set_user_password(user["user_id"], phash)
+    return render_template_string(RESET_SUCCESS_HTML), 200
 
 
 @app.get("/verify")
