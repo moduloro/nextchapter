@@ -60,3 +60,8 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - `POST /signup {email, password}` → creates user and emails verify link.
 - `POST /login {email, password}` → logs in if verified.
 - Both return JSON. In production you’d add sessions/JWT; here we return raw JSON for simplicity.
+
+## Forgot password
+- `POST /forgot_password {email}` → returns generic success.
+- If the user exists, a reset token is created and an email is sent.
+- Reset link goes to `/reset?token=...`.
