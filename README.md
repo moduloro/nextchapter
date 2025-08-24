@@ -72,3 +72,4 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - `GET /me?email=...` → returns `{ id, email, phase }`.
 - `POST /login` now includes the user's phase in the response.
 - Identity uses email for now; sessions/JWT will replace this later.
+- Front-end reads `loggedInEmail` from localStorage and highlights the active phase; clicking a phase persists it.

@@ -60,6 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (res.ok && data.ok) {
           localStorage.setItem('loggedInUser', data.user.email);
+          localStorage.setItem('loggedInEmail', data.user.email);
           msg.textContent = 'Sign-in successful!';
           setTimeout(() => { window.location.href = 'index.html'; }, 800);
         } else {
