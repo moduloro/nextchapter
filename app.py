@@ -12,6 +12,7 @@ from auth_utils import (
     mark_user_verified,
     consume_token,
 )
+from werkzeug.security import check_password_hash
 from sqlalchemy import text
 
 # --- Load config ---
@@ -53,6 +54,68 @@ def health():
         ok = False
         details["error"] = str(e)
     return jsonify({"ok": ok, "details": details})
+
+
+# --- Basic auth endpoints ---
+
+@app.post("/signup")
+def signup():
+    data = request.get_json(force=True)
+    email = (data.get("email") or "").strip().lower()
+    password = (data.get("password") or "").strip()
+
+    if not email or not password or len(password) < 8:
+        return jsonify({"ok": False, "error": "Invalid email or password"}), 400
+
+    sess = get_session()
+    try:
+        user = find_user_by_email(sess, email)
+        if user and user.is_verified:
+            return jsonify({"ok": False, "error": "User already exists"}), 400
+
+        if not user:
+            user = create_user(sess, email=email)
+
+        user.password_hash = hash_password(password)
+        sess.add(user)
+        sess.commit()
+
+        token = secrets.token_urlsafe(24)
+        issue_token(sess, user, token, "verify", ttl_minutes=60)
+        sess.commit()
+
+        try:
+            send_verification_email(email, token)
+        except Exception as e:
+            print(f"Email send failed: {e}")
+
+        return (
+            jsonify({"ok": True, "message": "Account created. Please verify via email."}),
+            201,
+        )
+    finally:
+        sess.close()
+
+
+@app.post("/login")
+def login():
+    data = request.get_json(force=True)
+    email = (data.get("email") or "").strip().lower()
+    password = (data.get("password") or "").strip()
+
+    sess = get_session()
+    try:
+        user = find_user_by_email(sess, email)
+        if not user:
+            return jsonify({"ok": False, "error": "User not found"}), 400
+        if not user.is_verified:
+            return jsonify({"ok": False, "error": "User not verified"}), 403
+        if not user.password_hash or not check_password_hash(user.password_hash, password):
+            return jsonify({"ok": False, "error": "Invalid credentials"}), 403
+
+        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email}}), 200
+    finally:
+        sess.close()
 
 
 # --- Load system prompt (fallback if missing/empty) ---

@@ -55,3 +55,8 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - Set `DATABASE_URL` in Render to your Postgres connection string
 - Tables are auto-created on startup (no migrations yet)
 - We’ll wire real token + user operations in subsequent steps
+
+## Signup and login
+- `POST /signup {email, password}` → creates user and emails verify link.
+- `POST /login {email, password}` → logs in if verified.
+- Both return JSON. In production you’d add sessions/JWT; here we return raw JSON for simplicity.
