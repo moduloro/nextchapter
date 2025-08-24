@@ -1,4 +1,5 @@
-import os, json, traceback
+import os, json, traceback, secrets
+from datetime import timedelta
 from flask import Flask, request, jsonify, send_from_directory, render_template_string
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -15,7 +16,14 @@ from sqlalchemy import text
 
 # --- Load config ---
 load_dotenv()
-from db import init_db, SessionLocal
+from db import (
+    init_db,
+    SessionLocal,
+    get_session,
+    find_user_by_email,
+    create_user,
+    issue_token,
+)
 init_db()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("MODEL", "gpt-4o-mini")          # safe default
@@ -301,6 +309,72 @@ def verify_view():
         logging.exception("mark_user_verified failed")
         return render_template_string(VERIFY_ERROR_HTML, message="Could not complete verification. Please try again."), 500
     return render_template_string(VERIFY_SUCCESS_HTML), 200
+
+
+@app.get("/_dev_issue_token")
+def _dev_issue_token():
+    """
+    DEV-ONLY: Creates a token row in the database for a user and (optionally) emails it.
+    Query params:
+      - email: required (user email)
+      - purpose: required ('reset' or 'verify')
+      - ttl: optional minutes (default 60)
+      - send: optional 'true' to also send email
+      - token: optional; if omitted, a secure random token is generated
+    Disabled when ENV=production.
+    """
+    if os.getenv("ENV", "development").lower() == "production":
+        return "Not available in production", 404
+
+    email = (request.args.get("email") or "").strip().lower()
+    purpose = (request.args.get("purpose") or "").strip().lower()
+    ttl_str = request.args.get("ttl", "60").strip()
+    send_flag = (request.args.get("send", "false").strip().lower() == "true")
+    token = (request.args.get("token") or "").strip() or secrets.token_urlsafe(24)
+
+    if not email or purpose not in ("reset", "verify"):
+        return jsonify({"error": "missing or invalid params: email, purpose in {reset,verify}"}), 400
+
+    try:
+        ttl = int(ttl_str)
+    except ValueError:
+        return jsonify({"error": "ttl must be an integer (minutes)"}), 400
+
+    sess = get_session()
+    try:
+        user = find_user_by_email(sess, email)
+        if not user:
+            user = create_user(sess, email=email)  # password_hash=None by default
+            sess.commit()
+
+        t = issue_token(sess, user, token=token, purpose=purpose, ttl_minutes=ttl)
+        sess.commit()
+
+        # Build link the same way mailer helpers do
+        base_url = os.getenv("APP_BASE_URL", "https://nextchapter.onrender.com").rstrip("/")
+        path = "/reset" if purpose == "reset" else "/verify"
+        link = f"{base_url}{path}?token={token}"
+
+        if send_flag:
+            try:
+                if purpose == "reset":
+                    send_password_reset_email(email, token)
+                else:
+                    send_verification_email(email, token)
+            except Exception as e:
+                # don't fail issuance just because email failed
+                print(f"[DEV] email send failed: {e}")
+
+        return jsonify({
+            "ok": True,
+            "email": email,
+            "purpose": purpose,
+            "token": token,
+            "link": link,
+            "ttl_minutes": ttl
+        }), 200
+    finally:
+        sess.close()
 
 
 @app.get("/_mail_test")

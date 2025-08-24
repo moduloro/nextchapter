@@ -42,6 +42,10 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - Test locally: `/_mail_verify_test?to=you@domain.com&token=demo`.
 - In production, configure `SMTP_*`, `EMAIL_*`, and `APP_BASE_URL`.
 
+## Dev token issuer
+- `/_dev_issue_token?email=<e>&purpose=reset|verify&ttl=60&send=true`
+- Only available when `ENV != production`.
+
 ## Email verification flow
 - Verification link format: GET `/verify?token=...`
 - In `ENV=development`, any non-empty token is accepted by the stub
