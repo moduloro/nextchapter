@@ -46,18 +46,6 @@ def health():
     return jsonify({"ok": ok, "details": details})
 
 
-@app.get("/db_health")
-def db_health():
-    sess = SessionLocal()
-    try:
-        result = sess.execute(
-            text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'")
-        )
-        tables = [row[0] for row in result]
-        return jsonify({"tables": tables})
-    finally:
-        sess.close()
-
 # --- Load system prompt (fallback if missing/empty) ---
 SP_PATH = os.path.join(os.path.dirname(__file__), "system_prompt.md")
 DEFAULT_SYSTEM = (
