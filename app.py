@@ -2,7 +2,7 @@ import os, json, traceback
 from flask import Flask, request, jsonify, send_from_directory, render_template_string
 from dotenv import load_dotenv
 from openai import OpenAI
-from mailer import send_mail, send_password_reset_email
+from mailer import send_mail, send_password_reset_email, send_verification_email
 
 # --- Load config ---
 load_dotenv()
@@ -262,6 +262,26 @@ def _mail_reset_test():
         return "Missing ?to=<email>", 400
     try:
         send_password_reset_email(to, token)
+        return "OK", 200
+    except Exception as e:
+        return str(e), 500
+
+
+@app.get("/_mail_verify_test")
+def _mail_verify_test():
+    """
+    Dev-only helper: sends a verification email to ?to=<email>
+    with a dummy or provided ?token=<token>. Disabled in production.
+    """
+    if os.getenv("ENV", "development").lower() == "production":
+        return "Not available in production", 404
+
+    to = request.args.get("to")
+    token = request.args.get("token", "demo-verify-token")
+    if not to:
+        return "Missing ?to=<email>", 400
+    try:
+        send_verification_email(to, token)
         return "OK", 200
     except Exception as e:
         return str(e), 500
