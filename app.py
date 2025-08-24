@@ -3,7 +3,13 @@ from flask import Flask, request, jsonify, send_from_directory, render_template_
 from dotenv import load_dotenv
 from openai import OpenAI
 from mailer import send_mail, send_password_reset_email, send_verification_email
-from auth_utils import validate_reset_token, hash_password, set_user_password
+from auth_utils import (
+    validate_reset_token,
+    hash_password,
+    set_user_password,
+    validate_verification_token,
+    mark_user_verified,
+)
 
 # --- Load config ---
 load_dotenv()
@@ -253,29 +259,41 @@ def reset_submit():
     return render_template_string(RESET_SUCCESS_HTML), 200
 
 
+VERIFY_ERROR_HTML = """
+<html>
+  <head><title>Verification error</title></head>
+  <body style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width:640px; margin:40px auto;">
+    <h1>Verification error</h1>
+    <p>{{ message }}</p>
+  </body>
+</html>
+"""
+
+VERIFY_SUCCESS_HTML = """
+<html>
+  <head><title>Email verified</title></head>
+  <body style="font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width:640px; margin:40px auto;">
+    <h1>Email verified</h1>
+    <p>Thanks! Your email has been verified. You can now sign in.</p>
+  </body>
+</html>
+"""
+
+
 @app.get("/verify")
 def verify_view():
-    """
-    Placeholder verify page. Reads ?token=... and renders confirmation.
-    Real verification flow will be implemented later.
-    """
-    token = request.args.get("token", "")
-    html = """
-    <html>
-      <head><title>Verify your email</title></head>
-      <body style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; max-width: 640px; margin: 40px auto;">
-        <h1>Verify your email</h1>
-        {% if token %}
-          <p>Thanks! We received your verification token:</p>
-          <pre style="background:#f6f8fa;padding:12px;border-radius:8px">{{ token }}</pre>
-          <p>This is a placeholder screen. Implement real verification logic here.</p>
-        {% else %}
-          <p><strong>Missing token.</strong> This page expects a <code>?token=...</code> parameter.</p>
-        {% endif %}
-      </body>
-    </html>
-    """
-    return render_template_string(html, token=token)
+    token = request.args.get("token", "").strip()
+    user = validate_verification_token(token)
+    if not user:
+        return render_template_string(VERIFY_ERROR_HTML, message="Invalid or expired verification link."), 400
+    try:
+        mark_user_verified(user["user_id"])
+    except Exception as e:
+        # Log and show a generic error
+        import logging
+        logging.exception("mark_user_verified failed")
+        return render_template_string(VERIFY_ERROR_HTML, message="Could not complete verification. Please try again."), 500
+    return render_template_string(VERIFY_SUCCESS_HTML), 200
 
 
 @app.get("/_mail_test")

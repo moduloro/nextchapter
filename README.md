@@ -41,3 +41,8 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - Set `APP_BASE_URL` (e.g., `https://nextchapter.onrender.com`).
 - Test locally: `/_mail_verify_test?to=you@domain.com&token=demo`.
 - In production, configure `SMTP_*`, `EMAIL_*`, and `APP_BASE_URL`.
+
+## Email verification flow
+- Verification link format: GET `/verify?token=...`
+- In `ENV=development`, any non-empty token is accepted by the stub
+- Real implementations should replace `validate_verification_token()` and `mark_user_verified()` with DB-backed logic
