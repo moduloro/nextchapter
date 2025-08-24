@@ -1,4 +1,4 @@
-// Simple client-side authentication using localStorage
+// Auth helpers that call server-side endpoints
 // Shows auth links in header and handles sign-up/sign-in forms
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,42 +15,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const signupForm = document.getElementById('signup-form');
   if (signupForm) {
-    signupForm.addEventListener('submit', (e) => {
+    signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('signup-username').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
       const password = document.getElementById('signup-password').value;
       const msg = document.getElementById('signup-msg');
-      if (!username || !password) {
+      if (!email || !password) {
         msg.textContent = 'Please fill in all fields.';
         return;
       }
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      if (users[username]) {
-        msg.textContent = 'User already exists.';
-        return;
+      msg.textContent = 'Creating...';
+      try {
+        const res = await fetch('/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.textContent = data.message || 'Account created. Please verify via email.';
+        } else {
+          msg.textContent = data.error || 'Sign-up failed.';
+        }
+      } catch (err) {
+        msg.textContent = 'Sign-up failed.';
       }
-      users[username] = { password };
-      localStorage.setItem('users', JSON.stringify(users));
-      localStorage.setItem('loggedInUser', username);
-      msg.textContent = 'Sign-up successful!';
-      setTimeout(() => { window.location.href = 'index.html'; }, 800);
     });
   }
 
   const signinForm = document.getElementById('signin-form');
   if (signinForm) {
-    signinForm.addEventListener('submit', (e) => {
+    signinForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('signin-username').value.trim();
+      const email = document.getElementById('signin-email').value.trim();
       const password = document.getElementById('signin-password').value;
       const msg = document.getElementById('signin-msg');
-      const users = JSON.parse(localStorage.getItem('users') || '{}');
-      if (users[username] && users[username].password === password) {
-        localStorage.setItem('loggedInUser', username);
-        msg.textContent = 'Sign-in successful!';
-        setTimeout(() => { window.location.href = 'index.html'; }, 800);
-      } else {
-        msg.textContent = 'Invalid credentials.';
+      msg.textContent = 'Signing in...';
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          localStorage.setItem('loggedInUser', data.user.email);
+          msg.textContent = 'Sign-in successful!';
+          setTimeout(() => { window.location.href = 'index.html'; }, 800);
+        } else {
+          msg.textContent = data.error || 'Invalid credentials.';
+        }
+      } catch (err) {
+        msg.textContent = 'Sign-in failed.';
       }
     });
   }
@@ -90,3 +106,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
