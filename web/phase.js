@@ -2,97 +2,68 @@
   const API = "";
   const root = document.getElementById("app-root");
   const pillLabel = document.getElementById("phase-pill-label");
+  const PHASES = ["stabilize","reframe","position","explore","apply","secure","transition"];
 
   function getEmail() {
+    // Use the same key your login code writes; adjust if different.
     return localStorage.getItem("loggedInEmail") || "";
   }
 
-  function normalize(s) {
-    return (s || "").trim().toLowerCase();
-  }
+  function cap(s){ return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
 
-  function setUIPhase(phaseKey) {
-    if (!phaseKey) return;
-    if (pillLabel) {
-      pillLabel.textContent = phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1);
-    }
-    document.querySelectorAll(".pill-option[data-phase]").forEach(el => {
-      el.classList.toggle("is-active", normalize(el.dataset.phase) === phaseKey);
+  function setUI(phase) {
+    if (!phase) return;
+    // highlight in the strip
+    document.querySelectorAll(".phase-step").forEach(el => {
+      el.classList.toggle("active", el.dataset.phase === phase);
     });
-    if (root) root.setAttribute("data-current-phase", phaseKey);
-    const select = document.getElementById("intake-phase");
-    if (select) {
-      select.value = phaseKey;
-    } else {
-      document
-        .querySelectorAll('#intake-phase-group input[name="phase"]')
-        .forEach(r => (r.checked = normalize(r.value) === phaseKey));
-    }
+    // header pill label
+    if (pillLabel) pillLabel.textContent = cap(phase);
+    // body attribute for others to react to
+    if (root) root.setAttribute("data-current-phase", phase);
   }
 
-  async function fetchMeAndRender() {
+  async function fetchMe() {
     const email = getEmail();
     if (!email) return;
     try {
-      const res = await fetch(`${API}/me?email=` + encodeURIComponent(email));
-      const data = await res.json();
-      if (data.ok && data.user) setUIPhase(normalize(data.user.phase || "explore"));
-    } catch (e) {
-      console.warn("Failed to fetch /me:", e);
-    }
-  }
-
-  async function savePhase(phaseKey) {
-    const email = getEmail();
-    if (!email) return;
-    try {
-      const res = await fetch(`${API}/phase`, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ email, phase: phaseKey })
-      });
+      const res = await fetch(`/me?email=${encodeURIComponent(email)}`);
       const data = await res.json();
       if (data.ok && data.user) {
-        setUIPhase(normalize(data.user.phase));
-      } else {
-        console.warn("Phase update failed", data);
-        alert(data.error || "Could not update phase");
+        let phase = (data.user.phase || "").toLowerCase();
+        if (!PHASES.includes(phase)) phase = "stabilize";
+        setUI(phase);
       }
-    } catch (e) {
-      console.error("Phase update error:", e);
-      alert("Network error saving phase");
-    }
+    } catch (e) { console.warn("fetch /me failed", e); }
   }
 
-  function bindPill() {
-    document.querySelectorAll(".pill-option[data-phase]").forEach(el => {
+  async function savePhase(phase) {
+    const email = getEmail();
+    if (!email) return;
+    try {
+      const res = await fetch(`/phase`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ email, phase })
+      });
+      const data = await res.json();
+      if (data.ok && data.user) setUI(data.user.phase.toLowerCase());
+      else alert(data.error || "Could not update phase");
+    } catch (e) { console.error("savePhase failed", e); }
+  }
+
+  function bindClicks() {
+    document.querySelectorAll(".phase-step").forEach(el => {
       el.addEventListener("click", () => {
-        const phaseKey = normalize(el.dataset.phase);
-        if (phaseKey) savePhase(phaseKey);
-      });
-    });
-  }
-
-  function bindIntake() {
-    const select = document.getElementById("intake-phase");
-    if (select) {
-      select.addEventListener("change", () => {
-        const val = normalize(select.value);
-        if (val) savePhase(val);
-      });
-      return;
-    }
-    const radios = document.querySelectorAll('#intake-phase-group input[name="phase"]');
-    radios.forEach(r => {
-      r.addEventListener("change", () => {
-        if (r.checked) savePhase(normalize(r.value));
+        const p = (el.dataset.phase || "").toLowerCase();
+        if (p) savePhase(p);
       });
     });
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    bindPill();
-    bindIntake();
-    fetchMeAndRender();
+    bindClicks();
+    fetchMe();
   });
 })();
+

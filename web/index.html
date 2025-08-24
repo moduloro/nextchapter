@@ -9,7 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body id="app-root" data-current-phase="explore" style="display:none">
+<body id="app-root" style="display:none">
   <div class="wrap">
     <header>
       <a class="logo" href="#"><span class="mark">N</span> NextChapter</a>
@@ -57,37 +57,37 @@
           <div class="row" role="group" aria-label="Where are you?">
             <span class="label">Where are you?</span>
             <div class="stage-flow">
-              <button class="chip stage" data-stage="stabilize">
+              <button class="chip stage phase-step" data-stage="stabilize" data-phase="stabilize">
                 <span class="circle">1</span>
                 <span class="title">Stabilize</span>
                 <span class="subtitle">Catch your breath</span>
               </button>
-              <button class="chip stage" data-stage="reframe">
+              <button class="chip stage phase-step" data-stage="reframe" data-phase="reframe">
                 <span class="circle">2</span>
                 <span class="title">Reframe</span>
                 <span class="subtitle">Shift perspective</span>
               </button>
-              <button class="chip stage" data-stage="position">
+              <button class="chip stage phase-step" data-stage="position" data-phase="position">
                 <span class="circle">3</span>
                 <span class="title">Position</span>
                 <span class="subtitle">Shape your story</span>
               </button>
-              <button class="chip stage" data-stage="explore">
+              <button class="chip stage phase-step" data-stage="explore" data-phase="explore">
                 <span class="circle">4</span>
                 <span class="title">Explore</span>
                 <span class="subtitle">Find paths</span>
               </button>
-              <button class="chip stage" data-stage="apply">
+              <button class="chip stage phase-step" data-stage="apply" data-phase="apply">
                 <span class="circle">5</span>
                 <span class="title">Apply</span>
                 <span class="subtitle">Send apps</span>
               </button>
-              <button class="chip stage" data-stage="secure">
+              <button class="chip stage phase-step" data-stage="secure" data-phase="secure">
                 <span class="circle">6</span>
                 <span class="title">Secure</span>
                 <span class="subtitle">Land offer</span>
               </button>
-              <button class="chip stage" data-stage="transition">
+              <button class="chip stage phase-step" data-stage="transition" data-phase="transition">
                 <span class="circle">7</span>
                 <span class="title">Transition</span>
                 <span class="subtitle">Start new role</span>
@@ -105,7 +105,7 @@
       <div class="card panel today">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem">
           <!-- Phase pill is a button -->
-          <button id="phase-chip" class="phase" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="phase-pill-label">Phase</span> · Week</button>
+          <button id="phase-chip" class="phase" type="button" aria-haspopup="dialog" aria-expanded="false"><span id="phase-pill-label">Apply</span> · Week</button>
           <button id="btn-standup" class="btn ghost">Daily check-in</button>
         </div>
         <div class="todo">
@@ -718,6 +718,6 @@ function fitWelcomeTiles(){
     if(userState.current_phase){ initToday(); }
   </script>
   <script src="auth.js"></script>
-  <script src="phase.js"></script>
+  <script src="/static/phase.js"></script>
 </body>
 </html>
