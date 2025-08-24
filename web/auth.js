@@ -54,4 +54,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  const forgotLink = document.getElementById('forgot-password');
+  const resetForm = document.getElementById('reset-form');
+  if (forgotLink && resetForm) {
+    forgotLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      resetForm.style.display = 'grid';
+    });
+
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('reset-email').value.trim();
+      const msg = document.getElementById('reset-msg');
+      if (!email) {
+        msg.textContent = 'Please enter your email.';
+        return;
+      }
+      msg.textContent = 'Sending...';
+      try {
+        const res = await fetch('/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.textContent = data.message || 'Reset email sent!';
+        } else {
+          msg.textContent = data.error || 'Failed to send reset email.';
+        }
+      } catch (err) {
+        msg.textContent = 'Error sending email.';
+      }
+    });
+  }
 });
