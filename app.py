@@ -230,22 +230,30 @@ def get_state_from_request(req):
 # --- Endpoints ---
 @app.post("/reset-password")
 def reset_password():
+    """Legacy endpoint to initiate a password reset email."""
     try:
         data = request.get_json(silent=True) or {}
         email = (data.get("email") or "").strip()
         if not email:
             return jsonify({"error": "Email required"}), 400
-        token = data.get("token", "demo-token")
+
+        generic_resp = jsonify({"sent": True, "message": "Reset email sent"})
+        sess = get_session()
         try:
-            send_password_reset_email(email, token)
-            sent = True
-        except Exception:
-            traceback.print_exc()
-            sent = False
-        if sent:
-            return jsonify({"sent": True, "message": "Reset email sent"})
-        else:
-            return jsonify({"sent": False, "error": "Email service not configured"}), 500
+            user = find_user_by_email(sess, email)
+            if not user:
+                return generic_resp, 200
+
+            token = secrets.token_urlsafe(24)
+            issue_token(sess, user, token, purpose="reset", ttl_minutes=60)
+            sess.commit()
+            try:
+                send_password_reset_email(email, token)
+            except Exception:
+                traceback.print_exc()
+            return generic_resp, 200
+        finally:
+            sess.close()
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
@@ -498,14 +506,25 @@ def _mail_reset_test():
         return "Not available in production", 404
 
     to = request.args.get("to")
-    token = request.args.get("token", "demo-token")
     if not to:
         return "Missing ?to=<email>", 400
+
+    token = request.args.get("token") or secrets.token_urlsafe(24)
+
+    sess = get_session()
     try:
+        user = find_user_by_email(sess, to)
+        if not user:
+            user = create_user(sess, email=to)
+        issue_token(sess, user, token, purpose="reset", ttl_minutes=60)
+        sess.commit()
         send_password_reset_email(to, token)
         return "OK", 200
     except Exception as e:
+        sess.rollback()
         return str(e), 500
+    finally:
+        sess.close()
 
 
 @app.get("/_mail_verify_test")
