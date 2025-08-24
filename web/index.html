@@ -8,6 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
   <link rel="stylesheet" href="style.css">
+  <style>
+  .phase.active { font-weight: 700; text-decoration: underline; }
+  </style>
 </head>
 <body style="display:none">
   <div class="wrap">
@@ -22,6 +25,15 @@
         </div>
       </div>
     </header>
+
+    <ul id="phase-choices">
+      <li data-phase="explore" class="phase">Explore</li>
+      <li data-phase="apply" class="phase">Apply</li>
+      <li data-phase="interview" class="phase">Interview</li>
+      <li data-phase="offer" class="phase">Offer</li>
+      <li data-phase="decide" class="phase">Decide</li>
+      <li data-phase="onboard" class="phase">Onboard</li>
+    </ul>
 
     <!-- Screen 1: Welcome -->
     <section id="scr-welcome" class="screen active">
@@ -718,5 +730,6 @@ function fitWelcomeTiles(){
     if(userState.current_phase){ initToday(); }
   </script>
   <script src="auth.js"></script>
+  <script src="phase.js"></script>
 </body>
 </html>
