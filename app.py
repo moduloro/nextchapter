@@ -1,9 +1,8 @@
-import os, json, traceback, smtplib
-from email.message import EmailMessage
+import os, json, traceback
 from flask import Flask, request, jsonify, send_from_directory
 from dotenv import load_dotenv
 from openai import OpenAI
-from mailer import send_mail
+from mailer import send_mail, send_password_reset_email
 
 # --- Load config ---
 load_dotenv()
@@ -108,36 +107,6 @@ def get_state_from_request(req):
     note = data.get("note", "")
     return user_state, note
 
-def send_reset_email(to_email):
-    """Send a password reset email using SMTP credentials if configured."""
-    smtp_host = os.getenv("SMTP_HOST")
-    smtp_port = int(os.getenv("SMTP_PORT", "587"))
-    smtp_user = os.getenv("SMTP_USERNAME")
-    smtp_password = os.getenv("SMTP_PASSWORD")
-    sender = os.getenv("RESET_EMAIL_FROM", smtp_user or "noreply@example.com")
-    body = os.getenv(
-        "RESET_EMAIL_BODY",
-        "Use the following link to reset your password: https://example.com/reset"
-    )
-    if not smtp_host:
-        print(f"[reset-password] SMTP not configured; would send to {to_email}")
-        return False
-    msg = EmailMessage()
-    msg["Subject"] = "Password Reset"
-    msg["From"] = sender
-    msg["To"] = to_email
-    msg.set_content(body)
-    try:
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            if smtp_user:
-                server.login(smtp_user, smtp_password)
-            server.send_message(msg)
-        return True
-    except Exception as e:
-        print("Error sending reset email:", e)
-        return False
-
 # --- Endpoints ---
 @app.post("/reset-password")
 def reset_password():
@@ -146,7 +115,13 @@ def reset_password():
         email = (data.get("email") or "").strip()
         if not email:
             return jsonify({"error": "Email required"}), 400
-        sent = send_reset_email(email)
+        token = data.get("token", "demo-token")
+        try:
+            send_password_reset_email(email, token)
+            sent = True
+        except Exception:
+            traceback.print_exc()
+            sent = False
         if sent:
             return jsonify({"sent": True, "message": "Reset email sent"})
         else:
@@ -217,6 +192,26 @@ def _mail_test():
     to = request.args.get("to", os.environ.get("EMAIL_FROM"))
     try:
         send_mail(to, "SMTP test", "If you read this, SMTP works.")
+        return "OK", 200
+    except Exception as e:
+        return str(e), 500
+
+
+@app.get("/_mail_reset_test")
+def _mail_reset_test():
+    """
+    Dev-only helper: sends a password reset email to ?to=<email>
+    with a dummy or provided ?token=<token>. Enabled in non-production only.
+    """
+    if os.getenv("ENV", "development").lower() == "production":
+        return "Not available in production", 404
+
+    to = request.args.get("to")
+    token = request.args.get("token", "demo-token")
+    if not to:
+        return "Missing ?to=<email>", 400
+    try:
+        send_password_reset_email(to, token)
         return "OK", 200
     except Exception as e:
         return str(e), 500
