@@ -65,3 +65,10 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - `POST /forgot_password {email}` → returns generic success.
 - If the user exists, a reset token is created and an email is sent.
 - Reset link goes to `/reset?token=...`.
+
+## User phase
+- Default phase = `explore`.
+- `POST /phase { email, phase }` → update phase. Allowed phases: explore, apply, interview, offer, decide, onboard.
+- `GET /me?email=...` → returns `{ id, email, phase }`.
+- `POST /login` now includes the user's phase in the response.
+- Identity uses email for now; sessions/JWT will replace this later.
