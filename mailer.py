@@ -58,3 +58,20 @@ def send_password_reset_email(to_addr: str, token: str):
 
     # reuse existing helper
     send_mail(to_addr, subject, text, html)
+
+
+def send_verification_email(to_addr: str, token: str):
+    """
+    Compose and send an email verification message.
+    Builds a link using APP_BASE_URL (defaults to https://nextchapter.onrender.com).
+    """
+    base_url = os.getenv("APP_BASE_URL", "https://nextchapter.onrender.com")
+    verify_path = "/verify"
+    verify_url = f"{base_url.rstrip('/')}{verify_path}?{urlencode({'token': token})}"
+
+    subject = "Confirm your email"
+    text = f"Please confirm your email by clicking: {verify_url}"
+    html = f"""<p>Please confirm your email by clicking the link below:</p>
+               <p><a href=\"{verify_url}\">{verify_url}</a></p>"""
+
+    send_mail(to_addr, subject, text, html)

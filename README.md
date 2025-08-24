@@ -36,3 +36,8 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 - Set `APP_BASE_URL` (e.g., `https://nextchapter.onrender.com`).
 - Test locally: `/_mail_reset_test?to=you@domain.com&token=demo`.
 - On Render, configure `SMTP_*`, `EMAIL_*`, and optionally `APP_BASE_URL`.
+
+## Signup verification email
+- Set `APP_BASE_URL` (e.g., `https://nextchapter.onrender.com`).
+- Test locally: `/_mail_verify_test?to=you@domain.com&token=demo`.
+- In production, configure `SMTP_*`, `EMAIL_*`, and `APP_BASE_URL`.
