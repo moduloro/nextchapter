@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sign In</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <button onclick="history.back()" class="btn ghost back-btn">Back</button>
+  <div class="wrap">
+    <h1>Sign In</h1>
+    <form id="signin-form" class="card panel" style="display:grid; gap:.8rem; max-width:400px; margin:0 auto;">
+      <div class="form-row">
+        <label for="signin-username" class="label">Username</label>
+        <input id="signin-username" class="input" type="text" autocomplete="off" required>
+      </div>
+      <div class="form-row">
+        <label for="signin-password" class="label">Password</label>
+        <input id="signin-password" class="input" type="password" required>
+      </div>
+      <button class="btn primary" type="submit">Sign In</button>
+      <p id="signin-msg" class="muted"></p>
+    </form>
+  </div>
+  <script src="auth.js"></script>
+</body>
+</html>
