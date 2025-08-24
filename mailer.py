@@ -12,6 +12,7 @@ Required env vars:
 
 import os, smtplib, ssl
 from email.message import EmailMessage
+from urllib.parse import urlencode
 
 SMTP_HOST = os.environ["SMTP_HOST"]
 SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
@@ -37,3 +38,23 @@ def send_mail(to_addr: str, subject: str, text: str, html: str | None = None):
         s.starttls(context=ctx)
         s.login(SMTP_USER, SMTP_PASS)
         s.send_message(msg)
+
+
+def send_password_reset_email(to_addr: str, token: str):
+    """
+    Compose and send a password reset email.
+    Uses APP_BASE_URL or falls back to request.host_url provided by caller.
+    """
+    base_url = os.getenv("APP_BASE_URL", "https://nextchapter.onrender.com")
+    reset_path = "/reset"
+    reset_url = f"{base_url.rstrip('/')}{reset_path}?{urlencode({'token': token})}"
+
+    subject = "Reset your password"
+    text = f"Click this link to reset your password: {reset_url}"
+    html = (
+        f"""<p>Click this link to reset your password:</p>
+               <p><a href=\"{reset_url}\">{reset_url}</a></p>"""
+    )
+
+    # reuse existing helper
+    send_mail(to_addr, subject, text, html)

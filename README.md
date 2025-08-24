@@ -31,3 +31,8 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 ## Serve HTML from another origin?
 - Set `API_BASE = "http://localhost:5055/"` in `web/index.html`.
 - Enable CORS in `app.py` (uncomment the lines near the bottom and restrict origins).
+
+## Password reset email
+- Set `APP_BASE_URL` (e.g., `https://nextchapter.onrender.com`).
+- Test locally: `/_mail_reset_test?to=you@domain.com&token=demo`.
+- On Render, configure `SMTP_*`, `EMAIL_*`, and optionally `APP_BASE_URL`.
