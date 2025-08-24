@@ -9,6 +9,7 @@ from auth_utils import (
     set_user_password,
     validate_verification_token,
     mark_user_verified,
+    consume_token,
 )
 from sqlalchemy import text
 
@@ -260,6 +261,7 @@ def reset_submit():
 
     phash = hash_password(password)
     set_user_password(user["user_id"], phash)
+    consume_token(token, "reset")
     return render_template_string(RESET_SUCCESS_HTML), 200
 
 
@@ -292,6 +294,7 @@ def verify_view():
         return render_template_string(VERIFY_ERROR_HTML, message="Invalid or expired verification link."), 400
     try:
         mark_user_verified(user["user_id"])
+        consume_token(token, "verify")
     except Exception as e:
         # Log and show a generic error
         import logging
