@@ -1,4 +1,4 @@
-import os, json, traceback, secrets
+import os, json, traceback, secrets, re
 from datetime import timedelta
 from flask import Flask, request, jsonify, send_from_directory, render_template_string, session
 from dotenv import load_dotenv
@@ -32,6 +32,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("MODEL", "gpt-4o-mini")          # safe default
 FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "gpt-4o-mini")
 PORT = int(os.getenv("PORT", "5055"))              # local dev port only
+ADMIN_SETUP_TOKEN = os.getenv("ADMIN_SETUP_TOKEN")
 
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY is not set. Put it in .env or export it before running.")
@@ -45,6 +46,27 @@ app.permanent_session_lifetime = timedelta(days=30)
 limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
 
+BCRYPT_PREFIX_RE = re.compile(r"^\$2[aby]?\$")
+
+
+def is_bcrypt_hash(h: str) -> bool:
+    return bool(h) and bool(BCRYPT_PREFIX_RE.match(h or ""))
+
+
+def hash_password(plain: str) -> str:
+    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    """True if hashed is valid bcrypt and matches; otherwise False (no exceptions)."""
+    if not is_bcrypt_hash(hashed):
+        return False
+    try:
+        return bcrypt.checkpw(plain.encode(), hashed.encode())
+    except Exception:
+        return False
+
+
 def require_login():
     uid = session.get("user_id")
     if not uid:
@@ -52,11 +74,10 @@ def require_login():
     return uid
 
 
-def issue_csrf(resp):
+def issue_csrf():
     token = secrets.token_urlsafe(16)
     session["csrf_token"] = token
-    resp.set_cookie("csrf_token", token, httponly=False, samesite="Lax")
-    return resp
+    return token
 
 
 def check_csrf(req):
@@ -102,7 +123,7 @@ def signup():
         if not user:
             user = create_user(sess, email=email)
 
-        user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        user.password_hash = hash_password(password)
         sess.add(user)
         sess.commit()
 
@@ -126,35 +147,77 @@ def signup():
 @app.post("/login")
 @limiter.limit("5 per minute")
 def login():
-    data = request.get_json(force=True)
-    email = (data.get("email") or "").strip().lower()
-    password = (data.get("password") or "").strip()
-
-    sess = get_session()
     try:
-        user = find_user_by_email(sess, email)
-        if not user:
-            return jsonify({"ok": False, "error": "User not found"}), 400
-        if not user.is_verified:
-            return jsonify({"ok": False, "error": "User not verified"}), 403
-        if not user.password_hash or not bcrypt.checkpw(password.encode(), user.password_hash.encode()):
-            return jsonify({"ok": False, "error": "Invalid credentials"}), 403
+        data = request.get_json(silent=True) or {}
+        email = (data.get("email") or "").strip().lower()
+        password = (data.get("password") or "")
+        if not email or not password:
+            return jsonify({"ok": False, "error": "missing email or password"}), 400
 
-        session["user_id"] = user.id
-        session.permanent = True
-        resp = jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}})
-        issue_csrf(resp)
-        return resp, 200
-    finally:
-        sess.close()
+        sess = get_session()
+        try:
+            user = sess.query(User).filter(User.email == email).first()
+            # constant-time dummy to equalize timing a bit
+            _ = bcrypt.checkpw(b"dummy", bcrypt.hashpw(b"dummy", bcrypt.gensalt()))
+
+            if not user or not user.password_hash or not verify_password(password, user.password_hash):
+                # If the stored hash is legacy (not bcrypt), force a reset rather than 500
+                if user and user.password_hash and not is_bcrypt_hash(user.password_hash):
+                    return jsonify({"ok": False, "error": "password needs reset"}), 401
+                return jsonify({"ok": False, "error": "invalid credentials"}), 401
+
+            if not user.is_verified:
+                return jsonify({"ok": False, "error": "user not verified"}), 403
+
+            # success: session + CSRF cookie
+            session.permanent = True
+            session["user_id"] = user.id
+            tok = issue_csrf()
+            resp = jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}})
+            resp.set_cookie("csrf_token", tok, httponly=False, samesite="Lax", secure=True)
+            return resp, 200
+        finally:
+            sess.close()
+    except Exception as e:
+        app.logger.error("LOGIN exception: %s", e)
+        app.logger.error("Trace:\n%s", traceback.format_exc())
+        return jsonify({"ok": False, "error": "internal error"}), 500
 
 
 @app.post("/logout")
 def logout():
     session.clear()
     resp = jsonify({"ok": True})
-    resp.set_cookie("csrf_token", "", expires=0)
+    resp.set_cookie("csrf_token", "", expires=0, samesite="Lax", secure=True)
     return resp
+
+
+@limiter.limit("2 per minute")
+@app.post("/admin/set_password")
+def admin_set_password():
+    # Strongly guarded: require header token
+    token = request.headers.get("X-Setup-Token", "")
+    if not ADMIN_SETUP_TOKEN or token != ADMIN_SETUP_TOKEN:
+        return jsonify({"ok": False, "error": "forbidden"}), 403
+
+    data = request.get_json(silent=True) or {}
+    email = (data.get("email") or "").strip().lower()
+    new_password = (data.get("new_password") or "")
+
+    if not email or not new_password or len(new_password) < 8:
+        return jsonify({"ok": False, "error": "invalid input"}), 400
+
+    sess = get_session()
+    try:
+        user = sess.query(User).filter(User.email == email).first()
+        if not user:
+            return jsonify({"ok": False, "error": "not found"}), 404
+        user.password_hash = hash_password(new_password)
+        sess.add(user)
+        sess.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        sess.close()
 
 # --- User phase helpers ---
 
@@ -463,7 +526,7 @@ def reset_submit():
     ):
         return render_template_string(RESET_SUCCESS_HTML), 200
 
-    phash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    phash = hash_password(password)
     set_user_password(user["user_id"], phash)
     consume_token(token, "reset")
     return render_template_string(RESET_SUCCESS_HTML), 200
