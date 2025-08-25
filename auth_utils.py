@@ -1,6 +1,5 @@
 import os
 from typing import Optional, Literal
-from werkzeug.security import generate_password_hash
 from db import get_session, validate_token, mark_token_used
 from db import SessionLocal  # if you prefer direct sessions
 from db import User  # for lookups/updates
@@ -27,9 +26,6 @@ def validate_reset_token(token: str) -> Optional[dict]:
         return {"user_id": t.user.id, "email": t.user.email}
     finally:
         sess.close()
-
-def hash_password(plain: str) -> str:
-    return generate_password_hash(plain)
 
 def set_user_password(user_id: int, password_hash: str) -> None:
     """
