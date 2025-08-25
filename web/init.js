@@ -19,6 +19,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  const openLib = document.getElementById('open-library');
+  if (openLib) {
+    openLib.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Navigate to the tools section on the home page
+      window.location.href = '/index.html#tools';
+    });
+  }
+
   document.querySelectorAll('.back-btn').forEach(btn => {
     btn.addEventListener('click', (e) => { e.preventDefault(); history.back(); });
   });
