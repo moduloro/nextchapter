@@ -4,18 +4,20 @@ console.log("[phase] phase.js requested");
 // Replace the value with the actual class from your CSS:
 const BUBBLE_CURRENT_CLASS = "active";
 
+function readCookie(name) {
+  return document.cookie.split("; ").reduce((acc, part) => {
+    const [k, v] = part.split("=");
+    if (k === name) acc = decodeURIComponent(v || "");
+    return acc;
+  }, "");
+}
+
 (function () {
   try {
     console.log("[phase] IIFE start");
 
     const PHASES = ["stabilize","reframe","position","explore","apply","secure","transition"];
     const pillLabel = document.getElementById("phase-pill-label");
-
-    function getEmail() {
-      return (localStorage.getItem("loggedInEmail")
-           || localStorage.getItem("currentUserEmail")
-           || "").toLowerCase();
-    }
 
     function setUI(phase) {
       if (!phase) return;
@@ -44,30 +46,41 @@ const BUBBLE_CURRENT_CLASS = "active";
     }
 
     async function fetchMe() {
-      const email = getEmail();
-      if (!email) { console.warn("[phase] no email found"); return; }
-      const r = await fetch(`/me?email=${encodeURIComponent(email)}`);
-      const data = await r.json();
-      console.log("[phase] GET /me →", data);
-      if (data.ok && data.user) {
-        let p = (data.user.phase||"").toLowerCase();
-        if (!PHASES.includes(p)) p = "stabilize";
-        setUI(p);
+      try {
+        const r = await fetch(`/me`, { credentials: "include" });
+        const data = await r.json();
+        console.log("[phase] GET /me →", data);
+        if (data.ok && data.user) {
+          let p = (data.user.phase || "").toLowerCase();
+          if (!PHASES.includes(p)) p = "stabilize";
+          setUI(p);
+        } else if (r.status === 401) {
+          console.warn("[phase] not logged in");
+        }
+      } catch (e) {
+        console.error("[phase] fetchMe error", e);
       }
     }
 
     async function doSavePhase(phase) {
-      const email = getEmail();
-      if (!email) { alert("Not logged in."); return; }
+      const csrf = readCookie("csrf_token");
+      if (!csrf) { alert("Missing CSRF token; please log in again."); return; }
+
       const r = await fetch(`/phase`, {
         method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ email, phase })
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrf
+        },
+        body: JSON.stringify({ phase })
       });
       const data = await r.json();
       console.log("[phase] POST /phase →", data);
       if (data.ok && data.user) {
-        setUI((data.user.phase||"").toLowerCase());
+        setUI((data.user.phase || "").toLowerCase());
+      } else if (r.status === 401) {
+        alert("Please log in again.");
       } else {
         alert(data.error || "Could not update phase");
       }
