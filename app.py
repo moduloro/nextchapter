@@ -192,30 +192,39 @@ def logout():
     return resp
 
 
-@limiter.limit("2 per minute")
 @app.post("/admin/set_password")
 def admin_set_password():
-    # Strongly guarded: require header token
-    token = request.headers.get("X-Setup-Token", "")
-    if not ADMIN_SETUP_TOKEN or token != ADMIN_SETUP_TOKEN:
-        return jsonify({"ok": False, "error": "forbidden"}), 403
-
+    """
+    Admin-only: reset a user's password directly.
+    Requires JSON body with { "token": "...", "email": "...", "password": "..." }.
+    Compares token against the ADMIN_SETUP_TOKEN from environment variables.
+    """
     data = request.get_json(silent=True) or {}
-    email = (data.get("email") or "").strip().lower()
-    new_password = (data.get("new_password") or "")
+    token = data.get("token")
+    expected = os.getenv("ADMIN_SETUP_TOKEN")
 
-    if not email or not new_password or len(new_password) < 8:
-        return jsonify({"ok": False, "error": "invalid input"}), 400
+    if not expected or token != expected:
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
+
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"ok": False, "error": "Missing email or password"}), 400
+
+    pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
     sess = get_session()
     try:
         user = sess.query(User).filter(User.email == email).first()
         if not user:
-            return jsonify({"ok": False, "error": "not found"}), 404
-        user.password_hash = hash_password(new_password)
+            return jsonify({"ok": False, "error": "User not found"}), 404
+
+        user.password_hash = pw_hash
         sess.add(user)
         sess.commit()
-        return jsonify({"ok": True}), 200
+
+        return jsonify({"ok": True, "message": f"Password reset for {email}"}), 200
     finally:
         sess.close()
 
