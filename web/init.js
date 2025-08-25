@@ -11,8 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     chip.addEventListener('change', e => window.savePhase(String(e.target.value || '').toLowerCase()));
   }
 
-  fetch('/me', { credentials: 'include' })
-    .then(r => r.ok ? r.json() : null)
+  fetch('/me', {credentials: 'include'})
+    .then(r => {
+      if (r.status === 401) return null;
+      if (!r.ok) throw new Error('me failed');
+      return r.json();
+    })
     .then(data => {
       if (!data || !data.user) return;
       const phase = String(data.user.phase || '').toLowerCase();
