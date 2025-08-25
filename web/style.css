@@ -298,7 +298,3 @@
       background:#000;
       color:#fff !important;
     }
-
-.phase-step.active {
-  outline: 3px solid var(--accent, #111);
-}

@@ -1,6 +1,9 @@
 // web/phase.js
 console.log("[phase] phase.js requested");
 
+// Replace the value with the actual class from your CSS:
+const BUBBLE_CURRENT_CLASS = "active";
+
 (function () {
   try {
     console.log("[phase] IIFE start");
@@ -14,38 +17,29 @@ console.log("[phase] phase.js requested");
            || "").toLowerCase();
     }
 
-    function cap(s){ return s ? s.charAt(0).toUpperCase() + s.slice(1) : ""; }
-
     function setUI(phase) {
       if (!phase) return;
 
-      // Highlight the active bubble
+      // Remove current class from all bubbles, then apply to the matching one
       document.querySelectorAll(".phase-step").forEach(el => {
-        el.classList.toggle("active", (el.dataset.phase || "").toLowerCase() === phase);
+        el.classList.remove(BUBBLE_CURRENT_CLASS);
       });
+      const active = document.querySelector(`.phase-step[data-phase="${phase}"]`);
+      if (active) active.classList.add(BUBBLE_CURRENT_CLASS);
 
-      // Update pill label (if present)
+      // Pill label stays as-is
       if (pillLabel) {
         const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
         pillLabel.textContent = cap(phase);
       }
-
-      // Body data attribute (optional hook for CSS/logic)
       document.body.setAttribute("data-current-phase", phase);
 
-      // NEW: sync dropdown #phase-chip if present
+      // Keep dropdown sync
       const dd = document.getElementById("phase-chip");
       if (dd) {
-        // normalize options to lowercase for comparison
         const options = Array.from(dd.options || []);
         const has = options.some(o => (o.value || "").toLowerCase() === phase);
-        if (has) {
-          dd.value = phase; // no event dispatch; we’re just reflecting state
-        } else {
-          // if the dropdown uses capitalized labels as values, try to coerce
-          const match = options.find(o => (o.textContent || "").trim().toLowerCase() === phase);
-          if (match) dd.value = match.value;
-        }
+        if (has) dd.value = phase;
       }
     }
 
