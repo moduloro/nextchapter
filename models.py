@@ -86,20 +86,29 @@ def create_tables(engine):
 
 
 def safe_migrate(engine):
-    """Perform idempotent schema migrations for email_tokens."""
+    """Idempotent migrations for email_tokens."""
     with engine.begin() as conn:
+        # Legacy column from early versions
         conn.execute(text("ALTER TABLE email_tokens DROP COLUMN IF EXISTS token;"))
+        # Clean bad rows so NOT NULL succeeds
+        conn.execute(text("DELETE FROM email_tokens WHERE token_hash IS NULL;"))
+        # Enforce NOT NULL on token_hash
         conn.execute(text("ALTER TABLE email_tokens ALTER COLUMN token_hash SET NOT NULL;"))
-        conn.execute(
-            text(
-                """
-                DO $$ BEGIN
-                BEGIN
-                    ALTER TABLE email_tokens ADD COLUMN used_at TIMESTAMPTZ NULL;
-                EXCEPTION WHEN duplicate_column THEN
-                    -- ignore
-                END;
-                END $$;
-                """
-            )
-        )
+        # Add used_at if missing
+        conn.execute(text(
+            """
+            DO $$ BEGIN
+            BEGIN
+                ALTER TABLE email_tokens ADD COLUMN used_at TIMESTAMPTZ NULL;
+            EXCEPTION WHEN duplicate_column THEN
+            END; END $$;
+            """
+        ))
+        # Ensure indexes exist
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_email_tokens_hash ON email_tokens(token_hash)"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS idx_email_tokens_user_type_used "
+            "ON email_tokens(user_id, type, used)"
+        ))
