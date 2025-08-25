@@ -9,7 +9,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base, User, EmailToken
+from models import Base, User, EmailToken, create_tables, safe_migrate
 from db import find_user_by_email, create_user, issue_token
 
 # --- Load config ---
@@ -23,8 +23,8 @@ def get_session():
     return SessionLocal()
 
 
-# Create tables if not already present
-Base.metadata.create_all(engine)
+create_tables(engine)
+safe_migrate(engine)
 
 from auth_utils import (
     validate_reset_token,
@@ -91,6 +91,16 @@ def check_csrf(req):
     header = req.headers.get("X-CSRF-Token") or ""
     return token and header and secrets.compare_digest(token, header)
 
+
+def generate_token_raw(nbytes: int = 32) -> str:
+    import secrets
+    return secrets.token_urlsafe(nbytes)
+
+
+def hash_token(raw: str) -> str:
+    import hashlib
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
 # --- Serve homepage (same-origin) ---
 @app.get("/")
 def home():
@@ -133,12 +143,13 @@ def signup():
         sess.add(user)
         sess.commit()
 
-        token = secrets.token_urlsafe(32)
-        issue_token(sess, user, token, "verify", ttl_minutes=60)
+        raw = generate_token_raw()
+        th = hash_token(raw)
+        issue_token(sess, user, th, "verify", ttl_minutes=60)
         sess.commit()
 
         try:
-            send_verification_email(email, token)
+            send_verification_email(email, raw)
         except Exception as e:
             print(f"Email send failed: {e}")
 
@@ -307,12 +318,13 @@ def forgot_password():
     try:
         user = find_user_by_email(sess, email)
         if user:
-            token = secrets.token_urlsafe(32)
+            raw = generate_token_raw()
+            th = hash_token(raw)
             # 60 minutes default TTL; adjust as desired
-            issue_token(sess, user, token=token, purpose="reset", ttl_minutes=30)
+            issue_token(sess, user, token_hash=th, purpose="reset", ttl_minutes=30)
             sess.commit()
             try:
-                send_password_reset_email(email, token)
+                send_password_reset_email(email, raw)
             except Exception as e:
                 # Do not leak details to the client
                 print(f"[forgot_password] email send failed for {email}: {e}")
@@ -412,10 +424,11 @@ def reset_password():
             if not user:
                 return generic_resp, 200
 
-            token = secrets.token_urlsafe(32)
-            issue_token(sess, user, token, purpose="reset", ttl_minutes=30)
+            raw = generate_token_raw()
+            th = hash_token(raw)
+            issue_token(sess, user, th, purpose="reset", ttl_minutes=30)
             sess.commit()
-            send_password_reset_email(email, token)
+            send_password_reset_email(email, raw)
             return generic_resp, 200
         finally:
             sess.close()
@@ -601,7 +614,7 @@ def _dev_issue_token():
     purpose = (request.args.get("purpose") or "").strip().lower()
     ttl_str = request.args.get("ttl", "60").strip()
     send_flag = (request.args.get("send", "false").strip().lower() == "true")
-    token = (request.args.get("token") or "").strip() or secrets.token_urlsafe(32)
+    raw = (request.args.get("token") or "").strip() or generate_token_raw()
 
     if not email or purpose not in ("reset", "verify"):
         return jsonify({"error": "missing or invalid params: email, purpose in {reset,verify}"}), 400
@@ -618,20 +631,20 @@ def _dev_issue_token():
             user = create_user(sess, email=email)  # password_hash=None by default
             sess.commit()
 
-        t = issue_token(sess, user, token=token, purpose=purpose, ttl_minutes=ttl)
+        t = issue_token(sess, user, token_hash=hash_token(raw), purpose=purpose, ttl_minutes=ttl)
         sess.commit()
 
         # Build link the same way mailer helpers do
         base_url = os.getenv("APP_BASE_URL", "https://nextchapter.onrender.com").rstrip("/")
         path = "/reset" if purpose == "reset" else "/verify"
-        link = f"{base_url}{path}?token={token}"
+        link = f"{base_url}{path}?token={raw}"
 
         if send_flag:
             try:
                 if purpose == "reset":
-                    send_password_reset_email(email, token)
+                    send_password_reset_email(email, raw)
                 else:
-                    send_verification_email(email, token)
+                    send_verification_email(email, raw)
             except Exception as e:
                 # don't fail issuance just because email failed
                 print(f"[DEV] email send failed: {e}")
@@ -640,7 +653,7 @@ def _dev_issue_token():
             "ok": True,
             "email": email,
             "purpose": purpose,
-            "token": token,
+            "token": raw,
             "link": link,
             "ttl_minutes": ttl
         }), 200
@@ -672,7 +685,7 @@ def _mail_reset_test():
     if not to:
         return "Missing ?to=<email>", 400
 
-    token = request.args.get("token") or secrets.token_urlsafe(32)
+    raw = request.args.get("token") or generate_token_raw()
 
     sess = get_session()
     try:
@@ -680,9 +693,9 @@ def _mail_reset_test():
         if not user:
             user = create_user(sess, email=to)
             sess.commit()
-        issue_token(sess, user, token, purpose="reset", ttl_minutes=30)
+        issue_token(sess, user, hash_token(raw), purpose="reset", ttl_minutes=30)
         sess.commit()
-        send_password_reset_email(to, token)
+        send_password_reset_email(to, raw)
         return "OK", 200
     except Exception as e:
         sess.rollback()
@@ -701,11 +714,11 @@ def _mail_verify_test():
         return "Not available in production", 404
 
     to = request.args.get("to")
-    token = request.args.get("token") or secrets.token_urlsafe(32)
+    raw = request.args.get("token") or generate_token_raw()
     if not to:
         return "Missing ?to=<email>", 400
     try:
-        send_verification_email(to, token)
+        send_verification_email(to, raw)
         return "OK", 200
     except Exception as e:
         return str(e), 500
