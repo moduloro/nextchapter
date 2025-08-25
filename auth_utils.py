@@ -1,8 +1,8 @@
 import os
 from typing import Optional, Literal
-from db import get_session, validate_token, mark_token_used
-from db import SessionLocal  # if you prefer direct sessions
-from db import User  # for lookups/updates
+from app import get_session
+from db import validate_token, mark_token_used
+from models import User
 
 def validate_reset_token(token: str) -> Optional[dict]:
     """
