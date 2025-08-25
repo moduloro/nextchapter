@@ -2,17 +2,16 @@ import os, json, traceback, secrets
 from datetime import timedelta
 from flask import Flask, request, jsonify, send_from_directory, render_template_string, session
 from dotenv import load_dotenv
+import bcrypt
 from openai import OpenAI
 from mailer import send_mail, send_password_reset_email, send_verification_email
 from auth_utils import (
     validate_reset_token,
-    hash_password,
     set_user_password,
     validate_verification_token,
     mark_user_verified,
     consume_token,
 )
-from werkzeug.security import check_password_hash
 from sqlalchemy import text
 
 # --- Load config ---
@@ -99,11 +98,11 @@ def signup():
         if not user:
             user = create_user(sess, email=email)
 
-        user.password_hash = hash_password(password)
+        user.password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
         sess.add(user)
         sess.commit()
 
-        token = secrets.token_urlsafe(24)
+        token = secrets.token_urlsafe(32)
         issue_token(sess, user, token, "verify", ttl_minutes=60)
         sess.commit()
 
@@ -133,7 +132,7 @@ def login():
             return jsonify({"ok": False, "error": "User not found"}), 400
         if not user.is_verified:
             return jsonify({"ok": False, "error": "User not verified"}), 403
-        if not user.password_hash or not check_password_hash(user.password_hash, password):
+        if not user.password_hash or not bcrypt.checkpw(password.encode(), user.password_hash.encode()):
             return jsonify({"ok": False, "error": "Invalid credentials"}), 403
 
         session["user_id"] = user.id
@@ -228,9 +227,9 @@ def forgot_password():
     try:
         user = find_user_by_email(sess, email)
         if user:
-            token = secrets.token_urlsafe(24)
+            token = secrets.token_urlsafe(32)
             # 60 minutes default TTL; adjust as desired
-            issue_token(sess, user, token=token, purpose="reset", ttl_minutes=60)
+            issue_token(sess, user, token=token, purpose="reset", ttl_minutes=30)
             sess.commit()
             try:
                 send_password_reset_email(email, token)
@@ -332,8 +331,8 @@ def reset_password():
             if not user:
                 return generic_resp, 200
 
-            token = secrets.token_urlsafe(24)
-            issue_token(sess, user, token, purpose="reset", ttl_minutes=60)
+            token = secrets.token_urlsafe(32)
+            issue_token(sess, user, token, purpose="reset", ttl_minutes=30)
             sess.commit()
             send_password_reset_email(email, token)
             return generic_resp, 200
@@ -449,18 +448,15 @@ def reset_submit():
     confirm = request.form.get("confirm", "")
     user = validate_reset_token(token)
 
-    error = None
-    if not user:
-        error = "Invalid or expired token."
-    elif not password or len(password) < 8:
-        error = "Password must be at least 8 characters."
-    elif password != confirm:
-        error = "Passwords do not match."
+    if (
+        not user
+        or not password
+        or len(password) < 8
+        or password != confirm
+    ):
+        return render_template_string(RESET_SUCCESS_HTML), 200
 
-    if error:
-        return render_template_string(RESET_FORM_HTML, token=token, user=user, error=error), 400
-
-    phash = hash_password(password)
+    phash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
     set_user_password(user["user_id"], phash)
     consume_token(token, "reset")
     return render_template_string(RESET_SUCCESS_HTML), 200
@@ -523,7 +519,7 @@ def _dev_issue_token():
     purpose = (request.args.get("purpose") or "").strip().lower()
     ttl_str = request.args.get("ttl", "60").strip()
     send_flag = (request.args.get("send", "false").strip().lower() == "true")
-    token = (request.args.get("token") or "").strip() or secrets.token_urlsafe(24)
+    token = (request.args.get("token") or "").strip() or secrets.token_urlsafe(32)
 
     if not email or purpose not in ("reset", "verify"):
         return jsonify({"error": "missing or invalid params: email, purpose in {reset,verify}"}), 400
@@ -594,7 +590,7 @@ def _mail_reset_test():
     if not to:
         return "Missing ?to=<email>", 400
 
-    token = request.args.get("token") or secrets.token_urlsafe(24)
+    token = request.args.get("token") or secrets.token_urlsafe(32)
 
     sess = get_session()
     try:
@@ -602,7 +598,7 @@ def _mail_reset_test():
         if not user:
             user = create_user(sess, email=to)
             sess.commit()
-        issue_token(sess, user, token, purpose="reset", ttl_minutes=60)
+        issue_token(sess, user, token, purpose="reset", ttl_minutes=30)
         sess.commit()
         send_password_reset_email(to, token)
         return "OK", 200
@@ -623,7 +619,7 @@ def _mail_verify_test():
         return "Not available in production", 404
 
     to = request.args.get("to")
-    token = request.args.get("token", "demo-verify-token")
+    token = request.args.get("token") or secrets.token_urlsafe(32)
     if not to:
         return "Missing ?to=<email>", 400
     try:

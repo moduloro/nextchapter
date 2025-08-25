@@ -1,5 +1,6 @@
 # db.py
 import os
+import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, Literal
 from sqlalchemy import (
@@ -34,22 +35,23 @@ class EmailToken(Base):
     __tablename__ = "email_tokens"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    token = Column(String(255), unique=True, index=True, nullable=False)
-    purpose = Column(String(20), nullable=False)  # 'reset' or 'verify'
+    token_hash = Column(String(255), unique=True, index=True, nullable=False)
+    type = Column(String(20), nullable=False)  # 'reset' or 'verify'
     expires_at = Column(DateTime, nullable=False)
-    used_at = Column(DateTime, nullable=True)
+    used = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     user = relationship("User", back_populates="tokens")
 
 
-Index("ix_email_tokens_active", EmailToken.token, EmailToken.purpose)
+Index("ix_email_tokens_active", EmailToken.token_hash, EmailToken.type)
 
 
 def init_db() -> None:
     """Create tables if they don't exist."""
     Base.metadata.create_all(engine)
     _ensure_phase_column()
+    _ensure_token_columns()
 
 
 def _ensure_phase_column():
@@ -59,6 +61,20 @@ def _ensure_phase_column():
         with engine.begin() as conn:
             # Postgres + SQLite compatible syntax
             conn.execute(text("ALTER TABLE users ADD COLUMN phase VARCHAR(50) NOT NULL DEFAULT 'explore'"))
+
+
+def _ensure_token_columns():
+    insp = inspect(engine)
+    cols = []
+    if insp.has_table("email_tokens"):
+        cols = [c["name"] for c in insp.get_columns("email_tokens")]
+    with engine.begin() as conn:
+        if "token_hash" not in cols:
+            conn.execute(text("ALTER TABLE email_tokens ADD COLUMN token_hash VARCHAR(255)"))
+        if "type" not in cols:
+            conn.execute(text("ALTER TABLE email_tokens ADD COLUMN type VARCHAR(20)"))
+        if "used" not in cols:
+            conn.execute(text("ALTER TABLE email_tokens ADD COLUMN used BOOLEAN NOT NULL DEFAULT FALSE"))
 
 
 def get_session() -> Session:
@@ -80,10 +96,11 @@ def find_user_by_email(sess: Session, email: str) -> Optional[User]:
 def issue_token(
     sess: Session, user: User, token: str, purpose: Literal["reset", "verify"], ttl_minutes: int = 60
 ) -> EmailToken:
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
     t = EmailToken(
         user_id=user.id,
-        token=token,
-        purpose=purpose,
+        token_hash=token_hash,
+        type=purpose,
         expires_at=datetime.utcnow() + timedelta(minutes=ttl_minutes),
     )
     sess.add(t)
@@ -93,17 +110,21 @@ def issue_token(
 
 def validate_token(sess: Session, token: str, purpose: Literal["reset", "verify"]) -> Optional[EmailToken]:
     now = datetime.utcnow()
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
     t = (
         sess.query(EmailToken)
-        .filter(EmailToken.token == token, EmailToken.purpose == purpose)
+        .filter(
+            EmailToken.token_hash == token_hash,
+            EmailToken.type == purpose,
+        )
         .one_or_none()
     )
-    if not t or t.used_at is not None or t.expires_at < now:
+    if not t or t.used or t.expires_at < now:
         return None
     return t
 
 
 def mark_token_used(sess: Session, t: EmailToken) -> None:
-    t.used_at = datetime.utcnow()
+    t.used = True
     sess.add(t)
 
