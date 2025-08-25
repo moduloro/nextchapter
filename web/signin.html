@@ -7,19 +7,19 @@
   <link rel="stylesheet" href="/style.css?v=1">
 </head>
 <body>
-  <button class="btn ghost back-btn">Back</button>
   <div class="wrap">
     <h1>Sign In</h1>
     <form id="signin-form" class="card panel" style="display:grid; gap:.8rem; max-width:400px; margin:0 auto;">
       <div class="form-row">
         <label for="signin-email" class="label">Email</label>
-        <input id="signin-email" class="input" type="email" autocomplete="off" required>
+        <input id="signin-email" name="email" class="input" type="email" autocomplete="off" required>
       </div>
       <div class="form-row">
         <label for="signin-password" class="label">Password</label>
-        <input id="signin-password" class="input" type="password" required>
+        <input id="signin-password" name="password" class="input" type="password" required>
       </div>
       <button class="btn primary" type="submit">Sign In</button>
+      <button type="button" class="btn ghost back-btn">Back</button>
       <p id="signin-msg" class="muted"></p>
     </form>
     <p style="text-align:center; margin-top:1rem;"><a id="forgot-password" href="#">Forgot password?</a></p>

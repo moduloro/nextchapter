@@ -7,19 +7,19 @@
   <link rel="stylesheet" href="/style.css?v=1">
 </head>
 <body>
-  <button class="btn ghost back-btn">Back</button>
   <div class="wrap">
     <h1>Sign Up</h1>
     <form id="signup-form" class="card panel" style="display:grid; gap:.8rem; max-width:400px; margin:0 auto;">
       <div class="form-row">
         <label for="signup-email" class="label">Email</label>
-        <input id="signup-email" class="input" type="email" autocomplete="off" required>
+        <input id="signup-email" name="email" class="input" type="email" autocomplete="off" required>
       </div>
       <div class="form-row">
         <label for="signup-password" class="label">Password</label>
-        <input id="signup-password" class="input" type="password" required>
+        <input id="signup-password" name="password" class="input" type="password" required>
       </div>
       <button class="btn primary" type="submit">Create Account</button>
+      <button type="button" class="btn ghost back-btn">Back</button>
       <p id="signup-msg" class="muted"></p>
     </form>
   </div>

@@ -33,57 +33,54 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(() => {});
   }
 
-  const signupForm = document.getElementById('signup-form');
-  if (signupForm) {
-    signupForm.addEventListener('submit', async (e) => {
+  const signUpForm = document.getElementById('signup-form');
+  if (signUpForm) {
+    signUpForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('signup-email').value.trim();
-      const password = document.getElementById('signup-password').value;
+      const email = signUpForm.querySelector('input[name="email"]')?.value || '';
+      const password = signUpForm.querySelector('input[name="password"]')?.value || '';
       const msg = document.getElementById('signup-msg');
-      if (!email || !password) {
-        msg.textContent = 'Please fill in all fields.';
-        return;
-      }
-      msg.textContent = 'Creating...';
       try {
-        const res = await fetch('/signup', {
+        const resp = await fetch('/signup', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
-        msg.textContent = res.ok ? (data.message || 'Account created. Please verify via email.') : (data.error || 'Sign-up failed.');
-      } catch (err) {
-        msg.textContent = 'Sign-up failed.';
+        if (resp.ok) {
+          window.location.href = '/signin.html?registered=1';
+        } else {
+          const data = await resp.json().catch(() => ({}));
+          if (msg) msg.textContent = data.error || 'Sign-up failed.';
+        }
+      } catch (_) {
+        if (msg) msg.textContent = 'Sign-up failed.';
       }
     });
   }
 
-  const signinForm = document.getElementById('signin-form');
-  if (signinForm) {
-    signinForm.addEventListener('submit', async (e) => {
+  const signInForm = document.getElementById('signin-form');
+  if (signInForm) {
+    signInForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('signin-email').value.trim();
-      const password = document.getElementById('signin-password').value;
+      const email = signInForm.querySelector('input[name="email"]')?.value || '';
+      const password = signInForm.querySelector('input[name="password"]')?.value || '';
       const msg = document.getElementById('signin-msg');
-      msg.textContent = 'Signing in...';
       try {
-        const res = await fetch('/login', {
+        const resp = await fetch('/login', {
           method: 'POST',
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
-        if (res.ok && data.ok) {
-          msg.textContent = 'Sign-in successful!';
-          setTimeout(() => { location.reload(); }, 800);
+        if (resp.ok) {
+          window.location.href = '/';
         } else {
-          msg.textContent = data.error || 'Invalid credentials.';
+          const data = await resp.json().catch(() => ({}));
+          if (msg) msg.textContent = data.error || 'Invalid credentials.';
         }
-      } catch (err) {
-        msg.textContent = 'Sign-in failed.';
+      } catch (_) {
+        if (msg) msg.textContent = 'Sign-in failed.';
       }
     });
   }

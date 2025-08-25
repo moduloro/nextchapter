@@ -11,8 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
     chip.addEventListener('change', e => window.savePhase(String(e.target.value || '').toLowerCase()));
   }
 
+  document.querySelectorAll('.tile[id^="tile-"], .tile[data-href]').forEach(el => {
+    const href = el.getAttribute('data-href');
+    if (href) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => { window.location.href = href; });
+    }
+  });
+
   document.querySelectorAll('.back-btn').forEach(btn => {
-    btn.addEventListener('click', () => history.back());
+    btn.addEventListener('click', (e) => { e.preventDefault(); history.back(); });
   });
 
   fetch('/me', {credentials: 'include'})
@@ -35,4 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     })
     .catch(() => {});
+
+  const pathname = window.location.pathname;
+  if (pathname.endsWith('/signin.html') || pathname.endsWith('/signup.html')) {
+    fetch('/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data && data.user) window.location.href = '/'; })
+      .catch(() => {});
+  }
 });
