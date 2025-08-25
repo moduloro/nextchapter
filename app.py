@@ -1,6 +1,6 @@
 import os, json, traceback, secrets
 from datetime import timedelta
-from flask import Flask, request, jsonify, send_from_directory, render_template_string
+from flask import Flask, request, jsonify, send_from_directory, render_template_string, session
 from dotenv import load_dotenv
 from openai import OpenAI
 from mailer import send_mail, send_password_reset_email, send_verification_email
@@ -24,6 +24,7 @@ from db import (
     find_user_by_email,
     create_user,
     issue_token,
+    User,
 )
 init_db()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -37,6 +38,28 @@ if not OPENAI_API_KEY:
 # --- Init app/client ---
 client = OpenAI(api_key=OPENAI_API_KEY)
 app = Flask(__name__, static_folder="web", static_url_path="")
+app.secret_key = os.getenv("FLASK_SECRET", "dev-secret")
+app.permanent_session_lifetime = timedelta(days=30)
+
+
+def require_login():
+    uid = session.get("user_id")
+    if not uid:
+        return None
+    return uid
+
+
+def issue_csrf(resp):
+    token = secrets.token_urlsafe(16)
+    session["csrf_token"] = token
+    resp.set_cookie("csrf_token", token, httponly=False, samesite="Lax")
+    return resp
+
+
+def check_csrf(req):
+    token = session.get("csrf_token")
+    header = req.headers.get("X-CSRF-Token") or ""
+    return token and header and secrets.compare_digest(token, header)
 
 # --- Serve homepage (same-origin) ---
 @app.get("/")
@@ -113,24 +136,32 @@ def login():
         if not user.password_hash or not check_password_hash(user.password_hash, password):
             return jsonify({"ok": False, "error": "Invalid credentials"}), 403
 
-        return jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}}), 200
+        session["user_id"] = user.id
+        session.permanent = True
+        resp = jsonify({"ok": True, "user": {"id": user.id, "email": user.email, "phase": user.phase}})
+        issue_csrf(resp)
+        return resp, 200
     finally:
         sess.close()
+
+
+@app.post("/logout")
+def logout():
+    session.clear()
+    resp = jsonify({"ok": True})
+    resp.set_cookie("csrf_token", "", expires=0)
+    return resp
 
 # --- User phase helpers ---
 
 @app.get("/me")
 def me():
-    """
-    TEMP (no sessions yet): Accepts ?email=... and returns { id, email, phase }.
-    In production replace with session/JWT-based identity.
-    """
-    email = (request.args.get("email") or "").strip().lower()
-    if not email:
-        return jsonify({"ok": False, "error": "email required"}), 400
+    uid = require_login()
+    if not uid:
+        return jsonify({"ok": False, "error": "not logged in"}), 401
     sess = get_session()
     try:
-        user = find_user_by_email(sess, email)
+        user = sess.get(User, uid)
         if not user:
             return jsonify({"ok": False, "error": "not found"}), 404
         phase = user.phase if user.phase in ALLOWED_PHASES else "stabilize"
@@ -152,20 +183,20 @@ ALLOWED_PHASES = {
 
 @app.post("/phase")
 def set_phase():
-    """
-    TEMP (no sessions yet): Accepts JSON { email, phase } and updates user's phase.
-    Valid phases: stabilize, reframe, position, explore, apply, secure, transition.
-    """
+    uid = require_login()
+    if not uid:
+        return jsonify({"ok": False, "error": "not logged in"}), 401
+    if not check_csrf(request):
+        return jsonify({"ok": False, "error": "invalid csrf"}), 403
     data = request.get_json(silent=True) or {}
-    email = (data.get("email") or "").strip().lower()
     phase = (data.get("phase") or "").strip().lower()
 
-    if not email or phase not in ALLOWED_PHASES:
-        return jsonify({"ok": False, "error": "invalid email or phase"}), 400
+    if phase not in ALLOWED_PHASES:
+        return jsonify({"ok": False, "error": "invalid phase"}), 400
 
     sess = get_session()
     try:
-        user = find_user_by_email(sess, email)
+        user = sess.get(User, uid)
         if not user:
             return jsonify({"ok": False, "error": "not found"}), 404
         user.phase = phase

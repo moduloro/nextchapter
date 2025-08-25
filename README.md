@@ -58,8 +58,9 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 
 ## Signup and login
 - `POST /signup {email, password}` → creates user and emails verify link.
-- `POST /login {email, password}` → logs in if verified.
-- Both return JSON. In production you’d add sessions/JWT; here we return raw JSON for simplicity.
+- `POST /login {email, password}` → logs in if verified, sets a session, and issues a `csrf_token` cookie.
+- `POST /logout` clears the session and cookie.
+- Both return JSON for simplicity.
 
 ## Forgot password
 - `POST /forgot_password {email}` → returns generic success.
@@ -68,8 +69,7 @@ curl -X POST http://localhost:5055/plan   -H "Content-Type: application/json"   
 
 ## User phase
 - Default phase = `explore`.
-- `POST /phase { email, phase }` → update phase. Allowed phases: explore, apply, interview, offer, decide, onboard.
-- `GET /me?email=...` → returns `{ id, email, phase }`.
-- `POST /login` now includes the user's phase in the response.
-- Identity uses email for now; sessions/JWT will replace this later.
-- Front-end reads `loggedInEmail` from localStorage and highlights the active phase; clicking a phase persists it.
+- `POST /phase { phase }` (requires login and `X-CSRF-Token` header) → update phase. Allowed phases: stabilize, reframe, position, explore, apply, secure, transition.
+- `GET /me` → returns `{ id, email, phase }` for the logged-in session.
+- `POST /login` includes the user's phase in the response.
+- Identity uses a server session; no `?email=` query or `loggedInEmail` storage is required.

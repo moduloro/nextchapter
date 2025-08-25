@@ -1,15 +1,34 @@
 // Auth helpers that call server-side endpoints
 // Shows auth links in header and handles sign-up/sign-in forms
 
+function readCookie(name) {
+  return document.cookie.split('; ').reduce((acc, part) => {
+    const [k, v] = part.split('=');
+    if (k === name) acc = decodeURIComponent(v || '');
+    return acc;
+  }, '');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const authLinks = document.getElementById('auth-links');
   const currentUser = localStorage.getItem('loggedInUser');
 
   if (authLinks && currentUser) {
     authLinks.innerHTML = `<span class="muted">Hi, ${currentUser}</span> <button id="logout" class="btn ghost">Log Out</button>`;
-    document.getElementById('logout').addEventListener('click', () => {
-      localStorage.removeItem('loggedInUser');
-      location.reload();
+    document.getElementById('logout').addEventListener('click', async () => {
+      const csrf = readCookie('csrf_token');
+      try {
+        await fetch('/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'X-CSRF-Token': csrf }
+        });
+      } catch (err) {
+        console.warn('logout failed', err);
+      } finally {
+        localStorage.removeItem('loggedInUser');
+        location.reload();
+      }
     });
   }
 
@@ -28,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const res = await fetch('/signup', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password })
         });
@@ -61,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (res.ok && data.ok) {
           localStorage.setItem('loggedInUser', data.user.email);
-          localStorage.setItem('loggedInEmail', data.user.email);
           msg.textContent = 'Sign-in successful!';
           setTimeout(() => { window.location.href = 'index.html'; }, 800);
         } else {
@@ -93,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const res = await fetch('/reset-password', {
           method: 'POST',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email })
         });
