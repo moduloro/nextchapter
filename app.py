@@ -636,6 +636,23 @@ def _mail_verify_test():
     except Exception as e:
         return str(e), 500
 
+
+@app.after_request
+def security_headers(resp):
+    resp.headers["X-Frame-Options"] = "DENY"
+    resp.headers["X-Content-Type-Options"] = "nosniff"
+    resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    resp.headers["Permissions-Policy"] = "camera=(), geolocation=(), microphone=()"
+    # Start with a relaxed CSP, tighten later as needed
+    resp.headers["Content-Security-Policy"] = (
+        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+        "script-src 'self'"
+    )
+    resp.headers["Strict-Transport-Security"] = (
+        "max-age=31536000; includeSubDomains; preload"
+    )
+    return resp
+
 if __name__ == "__main__":
     print(f"Starting JTBD Coach on http://localhost:{PORT} (model={MODEL}, fallback={FALLBACK_MODEL})")
     app.run(host="0.0.0.0", port=PORT, debug=True)
