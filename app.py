@@ -39,6 +39,7 @@ MODEL = os.getenv("MODEL", "gpt-4o-mini")          # safe default
 FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "gpt-4o-mini")
 PORT = int(os.getenv("PORT", "5055"))              # local dev port only
 ADMIN_SETUP_TOKEN = os.getenv("ADMIN_SETUP_TOKEN")
+ENV = os.getenv("ENV", "development").lower()
 
 if not OPENAI_API_KEY:
     raise RuntimeError("OPENAI_API_KEY is not set. Put it in .env or export it before running.")
@@ -48,8 +49,18 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 app = Flask(__name__, static_folder="web", static_url_path="")
 app.secret_key = os.getenv("FLASK_SECRET", "dev-secret")
 app.permanent_session_lifetime = timedelta(days=30)
+app.config.update(
+    SESSION_COOKIE_NAME="nc_session",
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
+if ENV == "production":
+    app.config.update(SESSION_COOKIE_SECURE=True)
 
-limiter = Limiter(get_remote_address, app=app, default_limits=[])
+storage_uri = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
+limiter = Limiter(
+    get_remote_address, app=app, storage_uri=storage_uri, default_limits=[]
+)
 
 
 BCRYPT_PREFIX_RE = re.compile(r"^\$2[aby]?\$")
@@ -607,7 +618,7 @@ def _dev_issue_token():
       - token: optional; if omitted, a secure random token is generated
     Disabled when ENV=production.
     """
-    if os.getenv("ENV", "development").lower() == "production":
+    if ENV == "production":
         return "Not available in production", 404
 
     email = (request.args.get("email") or "").strip().lower()
@@ -678,7 +689,7 @@ def _mail_reset_test():
     Dev-only helper: sends a password reset email to ?to=<email>
     with an optional ?token=<token>. Enabled in non-production only.
     """
-    if os.getenv("ENV", "development").lower() == "production":
+    if ENV == "production":
         return "Not available in production", 404
 
     to = request.args.get("to")
@@ -710,7 +721,7 @@ def _mail_verify_test():
     Dev-only helper: sends a verification email to ?to=<email>
     with a dummy or provided ?token=<token>. Disabled in production.
     """
-    if os.getenv("ENV", "development").lower() == "production":
+    if ENV == "production":
         return "Not available in production", 404
 
     to = request.args.get("to")
