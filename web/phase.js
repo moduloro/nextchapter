@@ -18,13 +18,35 @@ console.log("[phase] phase.js requested");
 
     function setUI(phase) {
       if (!phase) return;
+
+      // Highlight the active bubble
       document.querySelectorAll(".phase-step").forEach(el => {
-        el.classList.toggle("active", (el.dataset.phase||"").toLowerCase() === phase);
+        el.classList.toggle("active", (el.dataset.phase || "").toLowerCase() === phase);
       });
-      if (pillLabel) pillLabel.textContent = cap(phase);
-      const dropdown = document.getElementById("phase-chip");
-      if (dropdown) dropdown.value = phase;
+
+      // Update pill label (if present)
+      if (pillLabel) {
+        const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+        pillLabel.textContent = cap(phase);
+      }
+
+      // Body data attribute (optional hook for CSS/logic)
       document.body.setAttribute("data-current-phase", phase);
+
+      // NEW: sync dropdown #phase-chip if present
+      const dd = document.getElementById("phase-chip");
+      if (dd) {
+        // normalize options to lowercase for comparison
+        const options = Array.from(dd.options || []);
+        const has = options.some(o => (o.value || "").toLowerCase() === phase);
+        if (has) {
+          dd.value = phase; // no event dispatch; we’re just reflecting state
+        } else {
+          // if the dropdown uses capitalized labels as values, try to coerce
+          const match = options.find(o => (o.textContent || "").trim().toLowerCase() === phase);
+          if (match) dd.value = match.value;
+        }
+      }
     }
 
     async function fetchMe() {
