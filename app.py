@@ -719,7 +719,9 @@ def security_headers(resp):
     resp.headers["Permissions-Policy"] = "camera=(), geolocation=(), microphone=()"
     # Start with a relaxed CSP, tighten later as needed
     resp.headers["Content-Security-Policy"] = (
-        "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+        "default-src 'self'; "
+        "img-src 'self' data:; "
+        "style-src 'self' 'unsafe-inline'; "
         "script-src 'self'"
     )
     resp.headers["Strict-Transport-Security"] = (
