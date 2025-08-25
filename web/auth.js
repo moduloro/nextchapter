@@ -10,8 +10,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const authLinks = document.getElementById('auth-links');
 
   if (authLinks) {
-    fetch('/me', { credentials: 'include' })
-      .then(r => r.ok ? r.json() : null)
+    fetch('/me', {credentials: 'include'})
+      .then(r => {
+        if (r.status === 401) return null;
+        if (!r.ok) throw new Error('me failed');
+        return r.json();
+      })
       .then(data => {
         if (!data || !data.user) return;
         authLinks.innerHTML = `<span class="muted">Hi, ${data.user.email}</span> <button id="logout" class="btn ghost">Log Out</button>`;
@@ -74,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (res.ok && data.ok) {
           msg.textContent = 'Sign-in successful!';
-          setTimeout(() => { window.location.href = 'index.html'; }, 800);
+          setTimeout(() => { location.reload(); }, 800);
         } else {
           msg.textContent = data.error || 'Invalid credentials.';
         }
