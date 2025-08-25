@@ -1,6 +1,3 @@
-// Auth helpers that call server-side endpoints
-// Shows auth links in header and handles sign-up/sign-in forms
-
 function readCookie(name) {
   return document.cookie.split('; ').reduce((acc, part) => {
     const [k, v] = part.split('=');
@@ -11,25 +8,25 @@ function readCookie(name) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const authLinks = document.getElementById('auth-links');
-  const currentUser = localStorage.getItem('loggedInUser');
 
-  if (authLinks && currentUser) {
-    authLinks.innerHTML = `<span class="muted">Hi, ${currentUser}</span> <button id="logout" class="btn ghost">Log Out</button>`;
-    document.getElementById('logout').addEventListener('click', async () => {
-      const csrf = readCookie('csrf_token');
-      try {
-        await fetch('/logout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'X-CSRF-Token': csrf }
-        });
-      } catch (err) {
-        console.warn('logout failed', err);
-      } finally {
-        localStorage.removeItem('loggedInUser');
-        location.reload();
-      }
-    });
+  if (authLinks) {
+    fetch('/me', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data || !data.user) return;
+        authLinks.innerHTML = `<span class="muted">Hi, ${data.user.email}</span> <button id="logout" class="btn ghost">Log Out</button>`;
+        const btn = document.getElementById('logout');
+        if (btn) {
+          btn.addEventListener('click', async () => {
+            const csrf = readCookie('csrf_token');
+            try {
+              await fetch('/logout', { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
+            } catch (_) {}
+            location.reload();
+          });
+        }
+      })
+      .catch(() => {});
   }
 
   const signupForm = document.getElementById('signup-form');
@@ -52,11 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ email, password })
         });
         const data = await res.json();
-        if (res.ok) {
-          msg.textContent = data.message || 'Account created. Please verify via email.';
-        } else {
-          msg.textContent = data.error || 'Sign-up failed.';
-        }
+        msg.textContent = res.ok ? (data.message || 'Account created. Please verify via email.') : (data.error || 'Sign-up failed.');
       } catch (err) {
         msg.textContent = 'Sign-up failed.';
       }
@@ -80,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (res.ok && data.ok) {
-          localStorage.setItem('loggedInUser', data.user.email);
           msg.textContent = 'Sign-in successful!';
           setTimeout(() => { window.location.href = 'index.html'; }, 800);
         } else {
@@ -117,15 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ email })
         });
         const data = await res.json();
-        if (res.ok) {
-          msg.textContent = data.message || 'Reset email sent!';
-        } else {
-          msg.textContent = data.error || 'Failed to send reset email.';
-        }
+        msg.textContent = res.ok ? (data.message || 'Reset email sent!') : (data.error || 'Failed to send reset email.');
       } catch (err) {
         msg.textContent = 'Error sending email.';
       }
     });
   }
 });
-
