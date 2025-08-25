@@ -58,9 +58,15 @@ if ENV == "production":
     app.config.update(SESSION_COOKIE_SECURE=True)
 
 storage_uri = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
-limiter = Limiter(
-    get_remote_address, app=app, storage_uri=storage_uri, default_limits=[]
-)
+try:
+    limiter = Limiter(get_remote_address, app=app, storage_uri=storage_uri)
+except Exception:
+    # Log warning and fall back to in-memory so deploy never fails
+    app.logger.warning(
+        "Limiter storage '%s' unavailable; falling back to memory://",
+        storage_uri,
+    )
+    limiter = Limiter(get_remote_address, app=app, storage_uri="memory://")
 
 
 BCRYPT_PREFIX_RE = re.compile(r"^\$2[aby]?\$")
