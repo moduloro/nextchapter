@@ -22,6 +22,8 @@ console.log("[phase] phase.js requested");
         el.classList.toggle("active", (el.dataset.phase||"").toLowerCase() === phase);
       });
       if (pillLabel) pillLabel.textContent = cap(phase);
+      const dropdown = document.getElementById("phase-chip");
+      if (dropdown) dropdown.value = phase;
       document.body.setAttribute("data-current-phase", phase);
     }
 
@@ -71,9 +73,24 @@ console.log("[phase] phase.js requested");
       });
     }
 
+    function bindDropdown() {
+      const dropdown = document.getElementById("phase-chip");
+      if (!dropdown) {
+        console.log("[phase] no #phase-chip found");
+        return;
+      }
+      console.log("[phase] binding dropdown");
+      dropdown.addEventListener("change", () => {
+        const val = (dropdown.value || "").toLowerCase();
+        console.log("[phase] dropdown change →", val);
+        if (val) window.savePhase(val);
+      });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       console.log("[phase] DOMContentLoaded");
       bindClicks();
+      bindDropdown();
       fetchMe().catch(e => console.error("[phase] fetchMe error", e));
     });
 
