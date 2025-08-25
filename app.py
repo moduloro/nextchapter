@@ -158,7 +158,7 @@ def signup():
 
         raw = generate_token_raw()
         th = hash_token(raw)
-        issue_token(sess, user, th, "verify", ttl_minutes=60)
+        issue_token(sess, user, token_hash=th, purpose="verify", ttl_minutes=60)
         sess.commit()
 
         try:
@@ -439,7 +439,7 @@ def reset_password():
 
             raw = generate_token_raw()
             th = hash_token(raw)
-            issue_token(sess, user, th, purpose="reset", ttl_minutes=30)
+            issue_token(sess, user, token_hash=th, purpose="reset", ttl_minutes=30)
             sess.commit()
             send_password_reset_email(email, raw)
             return generic_resp, 200
@@ -706,7 +706,7 @@ def _mail_reset_test():
         if not user:
             user = create_user(sess, email=to)
             sess.commit()
-        issue_token(sess, user, hash_token(raw), purpose="reset", ttl_minutes=30)
+        issue_token(sess, user, token_hash=hash_token(raw), purpose="reset", ttl_minutes=30)
         sess.commit()
         send_password_reset_email(to, raw)
         return "OK", 200

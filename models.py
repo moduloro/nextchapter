@@ -29,6 +29,7 @@ class EmailToken(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     token_hash = Column(String, nullable=False)
     type = Column(String, nullable=False)  # 'reset' or 'verify'
+    purpose = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.datetime.utcnow)
     expires_at = Column(DateTime(timezone=True), nullable=False)
     used = Column(Boolean, nullable=False, default=False)
@@ -65,6 +66,7 @@ def create_tables(engine):
                     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                     token_hash TEXT NOT NULL,
                     type TEXT NOT NULL CHECK (type IN ('reset','verify')),
+                    purpose TEXT NULL,
                     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                     expires_at TIMESTAMPTZ NOT NULL,
                     used BOOLEAN NOT NULL DEFAULT FALSE,
@@ -100,6 +102,16 @@ def safe_migrate(engine):
             DO $$ BEGIN
             BEGIN
                 ALTER TABLE email_tokens ADD COLUMN used_at TIMESTAMPTZ NULL;
+            EXCEPTION WHEN duplicate_column THEN
+            END; END $$;
+            """
+        ))
+        # Add purpose if missing
+        conn.execute(text(
+            """
+            DO $$ BEGIN
+            BEGIN
+                ALTER TABLE email_tokens ADD COLUMN purpose TEXT NULL;
             EXCEPTION WHEN duplicate_column THEN
             END; END $$;
             """
