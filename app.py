@@ -7,6 +7,25 @@ from openai import OpenAI
 from mailer import send_mail, send_password_reset_email, send_verification_email
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from models import Base, User, EmailToken
+from db import find_user_by_email, create_user, issue_token
+
+# --- Load config ---
+load_dotenv()
+
+engine = create_engine(os.getenv("DATABASE_URL"))
+SessionLocal = sessionmaker(bind=engine)
+
+
+def get_session():
+    return SessionLocal()
+
+
+# Create tables if not already present
+Base.metadata.create_all(engine)
+
 from auth_utils import (
     validate_reset_token,
     set_user_password,
@@ -14,20 +33,7 @@ from auth_utils import (
     mark_user_verified,
     consume_token,
 )
-from sqlalchemy import text
 
-# --- Load config ---
-load_dotenv()
-from db import (
-    init_db,
-    SessionLocal,
-    get_session,
-    find_user_by_email,
-    create_user,
-    issue_token,
-    User,
-)
-init_db()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("MODEL", "gpt-4o-mini")          # safe default
 FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "gpt-4o-mini")
@@ -195,9 +201,9 @@ def logout():
 @app.post("/admin/set_password")
 def admin_set_password():
     """
-    Admin-only: reset a user's password directly.
+    Admin-only endpoint to reset a user's password.
     Requires JSON body with { "token": "...", "email": "...", "password": "..." }.
-    Compares token against the ADMIN_SETUP_TOKEN from environment variables.
+    Token must match ADMIN_SETUP_TOKEN from environment.
     """
     data = request.get_json(silent=True) or {}
     token = data.get("token")
@@ -207,23 +213,19 @@ def admin_set_password():
         return jsonify({"ok": False, "error": "Unauthorized"}), 403
 
     email = (data.get("email") or "").strip().lower()
-    password = data.get("password")
+    new_password = data.get("password")
 
-    if not email or not password:
-        return jsonify({"ok": False, "error": "Missing email or password"}), 400
-
-    pw_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    if not email or not new_password or len(new_password) < 8:
+        return jsonify({"ok": False, "error": "Invalid input"}), 400
 
     sess = get_session()
     try:
         user = sess.query(User).filter(User.email == email).first()
         if not user:
             return jsonify({"ok": False, "error": "User not found"}), 404
-
-        user.password_hash = pw_hash
+        user.password_hash = hash_password(new_password)
         sess.add(user)
         sess.commit()
-
         return jsonify({"ok": True, "message": f"Password reset for {email}"}), 200
     finally:
         sess.close()
