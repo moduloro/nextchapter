@@ -25,11 +25,15 @@ def issue_token(
     purpose: Literal["reset", "verify"],
     ttl_minutes: int = 60,
 ) -> EmailToken:
+    now = datetime.utcnow()
     t = EmailToken(
         user_id=user.id,
         token_hash=token_hash,
         type=purpose,
-        expires_at=datetime.utcnow() + timedelta(minutes=ttl_minutes),
+        purpose=purpose,
+        created_at=now,
+        expires_at=now + timedelta(minutes=ttl_minutes),
+        used=False,
     )
     sess.add(t)
     sess.flush()
