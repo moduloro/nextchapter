@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     chip.addEventListener('change', e => window.savePhase(String(e.target.value || '').toLowerCase()));
   }
 
+  document.querySelectorAll('.back-btn').forEach(btn => {
+    btn.addEventListener('click', () => history.back());
+  });
+
   fetch('/me', {credentials: 'include'})
     .then(r => {
       if (r.status === 401) return null;
