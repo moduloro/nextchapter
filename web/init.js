@@ -11,15 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
     chip.addEventListener('change', e => window.savePhase(String(e.target.value || '').toLowerCase()));
   }
 
-  document.querySelectorAll('[data-href]').forEach(el => {
+  document.querySelectorAll('.tile[id^="tile-"], .tile[data-href]').forEach(el => {
     const href = el.getAttribute('data-href');
-    if (!href) return;
-    el.style.cursor = 'pointer';
-    el.setAttribute('tabindex', '0');
-    el.addEventListener('click', () => { window.location.href = href; });
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
-    });
+    if (href) {
+      el.style.cursor = 'pointer';
+      el.addEventListener('click', () => { window.location.href = href; });
+    }
   });
 
   document.querySelectorAll('.back-btn').forEach(btn => {
