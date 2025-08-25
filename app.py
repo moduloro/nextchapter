@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import bcrypt
 from openai import OpenAI
 from mailer import send_mail, send_password_reset_email, send_verification_email
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from auth_utils import (
     validate_reset_token,
     set_user_password,
@@ -39,6 +41,8 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 app = Flask(__name__, static_folder="web", static_url_path="")
 app.secret_key = os.getenv("FLASK_SECRET", "dev-secret")
 app.permanent_session_lifetime = timedelta(days=30)
+
+limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
 
 def require_login():
@@ -120,6 +124,7 @@ def signup():
 
 
 @app.post("/login")
+@limiter.limit("5 per minute")
 def login():
     data = request.get_json(force=True)
     email = (data.get("email") or "").strip().lower()
@@ -181,6 +186,7 @@ ALLOWED_PHASES = {
 
 
 @app.post("/phase")
+@limiter.limit("10 per minute")
 def set_phase():
     uid = require_login()
     if not uid:
@@ -316,6 +322,7 @@ def get_state_from_request(req):
 
 # --- Endpoints ---
 @app.post("/reset-password")
+@limiter.limit("3 per minute")
 def reset_password():
     """Legacy endpoint to initiate a password reset email."""
     try:
@@ -484,6 +491,7 @@ VERIFY_SUCCESS_HTML = """
 
 
 @app.get("/verify")
+@limiter.limit("3 per minute")
 def verify_view():
     token = request.args.get("token", "").strip()
     user = validate_verification_token(token)
